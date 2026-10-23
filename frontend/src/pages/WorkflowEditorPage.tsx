@@ -19,7 +19,9 @@ import "@xyflow/react/dist/style.css";
 
 import { fetchGraph, saveGraph, type ApiNode, type ApiConnection } from "../lib/graph.api";
 import { testWorkflow, type TestRunResult } from "../lib/execution.api";
+import { startWorkflowExecution } from "../lib/executionHistory.api";
 import { fetchTriggers } from "../lib/trigger.api";
+import { fetchWorkflowCredentials } from "../lib/credential.api";
 import { getNodeTypeDef, type NodeConfig } from "../nodes/nodeTypes";
 import WorkflowNode, { type WorkflowNodeData } from "../components/WorkFlow";
 import NodePalette from "../components/NodePalette";
@@ -56,6 +58,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [loadedOnce, setLoadedOnce] = useState(false);
   const [testResult, setTestResult] = useState<TestRunResult | null>(null);
+  const [runMessage, setRunMessage] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["graph", workflowId],
@@ -65,6 +68,11 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   const { data: triggers } = useQuery({
     queryKey: ["triggers", workflowId],
     queryFn: () => fetchTriggers(workflowId),
+  });
+
+  const { data: credentials } = useQuery({
+    queryKey: ["workflow-credentials", workflowId],
+    queryFn: () => fetchWorkflowCredentials(workflowId),
   });
 
   // Sync server data into React Flow's own state exactly once per load —
@@ -107,9 +115,6 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
 
   const testMutation = useMutation({
     mutationFn: async () => {
-      // Test always runs against what's actually saved in the DB, so we
-      // save the current canvas state first — otherwise "Test" could show
-      // results for a graph the user hasn't actually persisted yet.
       const { apiNodes, apiConnections } = buildGraphPayload();
       await saveGraph(workflowId, apiNodes, apiConnections);
       return testWorkflow(workflowId);
@@ -117,6 +122,19 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
     onSuccess: (result) => {
       setTestResult(result);
       queryClient.invalidateQueries({ queryKey: ["graph", workflowId] });
+    },
+  });
+
+  const queueRunMutation = useMutation({
+    mutationFn: async () => {
+      const { apiNodes, apiConnections } = buildGraphPayload();
+      await saveGraph(workflowId, apiNodes, apiConnections);
+      return startWorkflowExecution(workflowId);
+    },
+    onSuccess: (data) => {
+      setRunMessage(`Queued execution #${data.id.slice(-6)}`);
+      setTimeout(() => setRunMessage(null), 3000);
+      queryClient.invalidateQueries({ queryKey: ["executions", workflowId] });
     },
   });
 
@@ -185,31 +203,43 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
           &larr; Back to workspace
         </Link>
         <div className="flex items-center gap-3">
-          <Link
-            to={`/workflows/${workflowId}/executions`}
-            className="text-sm text-slate-400 hover:text-slate-200 transition"
-          >
-            Executions
-          </Link>
+          {runMessage && (
+            <span className="text-xs text-indigo-400 animate-pulse">{runMessage}</span>
+          )}
           {saveMutation.isSuccess && (
             <span className="text-xs text-emerald-400">Saved</span>
           )}
           {saveMutation.isError && (
             <span className="text-xs text-red-400">Save failed</span>
           )}
+          <Link
+            to={`/workflows/${workflowId}/executions`}
+            className="text-sm text-slate-400 hover:text-slate-200 transition px-2 py-1 rounded hover:bg-slate-800"
+          >
+            Executions &rarr;
+          </Link>
           <button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
-            className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-md px-4 py-1.5 text-sm font-medium transition"
+            className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 rounded-md px-3 py-1.5 text-sm font-medium transition"
           >
             {saveMutation.isPending ? "Saving..." : "Save"}
           </button>
           <button
             onClick={() => testMutation.mutate()}
             disabled={testMutation.isPending || nodes.length === 0}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md px-4 py-1.5 text-sm font-medium transition"
+            className="bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 text-slate-200 rounded-md px-3 py-1.5 text-sm font-medium transition"
+            title="Run synchronously in-process and view output"
           >
-            {testMutation.isPending ? "Running..." : "Test workflow"}
+            {testMutation.isPending ? "Testing..." : "Test (Sync)"}
+          </button>
+          <button
+            onClick={() => queueRunMutation.mutate()}
+            disabled={queueRunMutation.isPending || nodes.length === 0}
+            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-md px-3.5 py-1.5 text-sm font-medium transition shadow-sm"
+            title="Dispatch execution to BullMQ worker queue"
+          >
+            {queueRunMutation.isPending ? "Queueing..." : "Run (Queue)"}
           </button>
         </div>
       </div>
@@ -244,6 +274,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
             onDelete={deleteSelectedNode}
             onClose={() => setSelectedNodeId(null)}
             webhookUrl={selectedNodeTrigger?.webhookUrl}
+            credentials={credentials}
           />
         )}
       </div>

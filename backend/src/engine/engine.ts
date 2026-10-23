@@ -58,47 +58,90 @@ export async function runWorkflowTest(
   const results: NodeExecutionResult[] = [];
   const context: ExecutionContext = { variables: {} };
 
-  // For each node, which other nodes feed into it directly.
-  const incomingBySource = new Map<string, string[]>();
+  // Set of connections that have been disabled due to conditional branching (e.g. IF condition)
+  const disabledConnections = new Set<EngineConnection>();
+
+  // Map of incoming connections for each node
+  const incomingConnections = new Map<string, EngineConnection[]>();
   for (const conn of connections) {
-    if (!incomingBySource.has(conn.targetNode)) incomingBySource.set(conn.targetNode, []);
-    incomingBySource.get(conn.targetNode)!.push(conn.sourceNode);
+    if (!incomingConnections.has(conn.targetNode)) incomingConnections.set(conn.targetNode, []);
+    incomingConnections.get(conn.targetNode)!.push(conn);
+  }
+
+  // Map of outgoing connections for each node
+  const outgoingConnections = new Map<string, EngineConnection[]>();
+  for (const conn of connections) {
+    if (!outgoingConnections.has(conn.sourceNode)) outgoingConnections.set(conn.sourceNode, []);
+    outgoingConnections.get(conn.sourceNode)!.push(conn);
   }
 
   let overallStatus: "success" | "failed" = "success";
 
   for (const nodeId of order) {
     const node = nodesById.get(nodeId)!;
-    const upstreamIds = incomingBySource.get(nodeId) ?? [];
-    const upstreamFailed = upstreamIds.some((id) => failedOrSkipped.has(id));
+    const incoming = incomingConnections.get(nodeId) ?? [];
 
-    if (upstreamFailed) {
+    const hasIncoming = incoming.length > 0;
+    const activeIncoming = incoming.filter(
+      (c) => !disabledConnections.has(c) && !failedOrSkipped.has(c.sourceNode)
+    );
+
+    // If node has incoming connections and NONE of them are active/successful, skip it
+    if (hasIncoming && activeIncoming.length === 0) {
       failedOrSkipped.add(nodeId);
+      for (const outConn of outgoingConnections.get(nodeId) ?? []) {
+        disabledConnections.add(outConn);
+      }
       results.push({ nodeId, type: node.type, status: "skipped", durationMs: 0 });
       continue;
     }
 
-    // Single upstream -> pass its output directly. Multiple -> pass an
-    // array of outputs, in connection order, so a node can fan-in.
+    // Collect inputs from active upstream connections
+    const inputs = activeIncoming.map((conn) => {
+      const out = outputs.get(conn.sourceNode);
+      const sourceNode = nodesById.get(conn.sourceNode);
+      // For IF nodes, unwrap and pass the item payload if present
+      if (
+        sourceNode?.type === "logic.if" &&
+        out &&
+        typeof out === "object" &&
+        "input" in (out as Record<string, unknown>)
+      ) {
+        return (out as { input: unknown }).input;
+      }
+      return out;
+    });
+
     const input =
-      upstreamIds.length === 0
-        ? null
-        : upstreamIds.length === 1
-          ? outputs.get(upstreamIds[0])
-          : upstreamIds.map((id) => outputs.get(id));
+      inputs.length === 0 ? null : inputs.length === 1 ? inputs[0] : inputs;
 
     const startedAt = Date.now();
     try {
-      // A webhook/schedule trigger's real payload takes priority over its
-      // executor's generic stub output — this is how external data (a
-      // webhook's request body, a schedule tick's timestamp) actually
-      // enters the graph.
       const hasOverride = triggerOverrides && nodeId in triggerOverrides;
       const output = hasOverride
         ? triggerOverrides![nodeId]
         : await getExecutor(node.type)(node.configuration, input, context);
 
       outputs.set(nodeId, output);
+
+      // Handle conditional branching for IF node
+      if (
+        node.type === "logic.if" &&
+        output &&
+        typeof output === "object" &&
+        "result" in (output as Record<string, unknown>)
+      ) {
+        const isTrue = Boolean((output as { result: unknown }).result);
+        const nodeOutgoing = outgoingConnections.get(nodeId) ?? [];
+        for (const outConn of nodeOutgoing) {
+          if (isTrue && outConn.sourceHandle === "false") {
+            disabledConnections.add(outConn);
+          } else if (!isTrue && outConn.sourceHandle === "true") {
+            disabledConnections.add(outConn);
+          }
+        }
+      }
+
       results.push({
         nodeId,
         type: node.type,
@@ -108,6 +151,9 @@ export async function runWorkflowTest(
       });
     } catch (err) {
       failedOrSkipped.add(nodeId);
+      for (const outConn of outgoingConnections.get(nodeId) ?? []) {
+        disabledConnections.add(outConn);
+      }
       overallStatus = "failed";
       results.push({
         nodeId,

@@ -17,6 +17,8 @@ interface DbNode {
 interface DbConnection {
   sourceNode: string;
   targetNode: string;
+  sourceHandle: string | null;
+  targetHandle: string | null;
 }
 
 // Same fix as index.ts — the worker is a separate process, so it needs
@@ -69,7 +71,12 @@ async function processJob(job: Job<ExecutionJobData>) {
 
     const { status, results } = await runWorkflowTest(
       resolvedNodes,
-      connections.map((c: DbConnection) => ({ sourceNode: c.sourceNode, targetNode: c.targetNode })),
+      connections.map((c: DbConnection) => ({
+        sourceNode: c.sourceNode,
+        targetNode: c.targetNode,
+        sourceHandle: c.sourceHandle,
+        targetHandle: c.targetHandle,
+      })),
       triggerOverrides
     );
 

@@ -44,8 +44,9 @@ export const NODE_TYPES: NodeTypeDef[] = [
     category: "action",
     color: "indigo",
     hasInput: true,
-    defaultConfig: { method: "GET", url: "" },
-    summarize: (c) => `${(c.method as string) || "GET"} ${(c.url as string) || "(no URL set)"}`,
+    defaultConfig: { method: "GET", url: "", credentialId: "" },
+    summarize: (c) =>
+      `${(c.method as string) || "GET"} ${(c.url as string) || "(no URL set)"}${c.credentialId ? " [Cred]" : ""}`,
   },
   {
     type: "logic.if",

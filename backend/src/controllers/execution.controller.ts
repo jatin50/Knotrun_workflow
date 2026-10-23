@@ -12,6 +12,8 @@ interface DbNode {
 interface DbConnection {
   sourceNode: string;
   targetNode: string;
+  sourceHandle: string | null;
+  targetHandle: string | null;
 }
 
 export async function testWorkflow(req: Request, res: Response) {
@@ -44,7 +46,12 @@ export async function testWorkflow(req: Request, res: Response) {
 
     const { status, results } = await runWorkflowTest(
       resolvedNodes,
-      connections.map((c: DbConnection) => ({ sourceNode: c.sourceNode, targetNode: c.targetNode }))
+      connections.map((c: DbConnection) => ({
+        sourceNode: c.sourceNode,
+        targetNode: c.targetNode,
+        sourceHandle: c.sourceHandle,
+        targetHandle: c.targetHandle,
+      }))
     );
 
     return res.json({ status, results });

@@ -27,9 +27,9 @@ function WorkflowNode({ data, selected }: NodeProps) {
 
   return (
     <div
-      className={`min-w-45 rounded-lg bg-slate-900 border-2 ${
+      className={`min-w-48 rounded-lg bg-slate-900 border-2 ${
         selected ? "border-white" : accent.border
-      } px-3 py-2 shadow-lg`}
+      } px-3 py-2 shadow-lg relative`}
     >
       {def.hasInput && (
         <Handle type="target" position={Position.Left} className="bg-slate-500!" />
@@ -39,11 +39,37 @@ function WorkflowNode({ data, selected }: NodeProps) {
         <span className={`w-2 h-2 rounded-full ${accent.dot}`} />
         <span className="text-sm font-medium text-slate-100">{def.label}</span>
       </div>
-      <p className="text-xs text-slate-400 mt-1 truncate max-w-40">
+      <p className="text-xs text-slate-400 mt-1 truncate max-w-44">
         {def.summarize(nodeData.configuration ?? {})}
       </p>
 
-      <Handle type="source" position={Position.Right} className="bg-slate-500!" />
+      {def.type === "logic.if" ? (
+        <>
+          <div className="mt-2 pt-1 border-t border-slate-800 flex justify-between items-center text-[10px]">
+            <span className="text-slate-500">Outputs</span>
+            <div className="flex flex-col text-right font-mono font-medium">
+              <span className="text-emerald-400">true &rarr;</span>
+              <span className="text-rose-400">false &rarr;</span>
+            </div>
+          </div>
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="true"
+            style={{ top: "68%", background: "#10b981", width: "9px", height: "9px" }}
+            title="True branch"
+          />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="false"
+            style={{ top: "86%", background: "#f43f5e", width: "9px", height: "9px" }}
+            title="False branch"
+          />
+        </>
+      ) : (
+        <Handle type="source" position={Position.Right} className="bg-slate-500!" />
+      )}
     </div>
   );
 }

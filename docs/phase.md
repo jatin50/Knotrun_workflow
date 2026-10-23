@@ -48,7 +48,7 @@ Goal: users can register, log in, and hit protected routes.
 
 ---
 
-## Phase 3 — Workspaces & Workflows (CRUD only, no execution yet)  -- done
+## Phase 3 — Workspaces & Workflows (CRUD only, no execution yet) --done
 
 Goal: users can create and manage workflow "shells" — no running yet.
 
@@ -60,7 +60,7 @@ Goal: users can create and manage workflow "shells" — no running yet.
 
 ---
 
-## Phase 4 — Workflow Editor Canvas -- done
+## Phase 4 — Workflow Editor Canvas --done
 
 Goal: the visual drag-and-drop builder, saving to the DB — still no execution.
 
@@ -73,7 +73,7 @@ Goal: the visual drag-and-drop builder, saving to the DB — still no execution.
 
 ---
 
-## Phase 5 — Node Engine (synchronous execution)
+## Phase 5 — Node Engine (synchronous execution) --done
 
 Goal: a workflow can actually run, one node at a time, in-process — no queue yet.
 
@@ -81,12 +81,13 @@ Goal: a workflow can actually run, one node at a time, in-process — no queue y
 - Build the node engine: load graph → topological order → execute each node → pass output to next
 - Implement the starter node set's execution logic (Manual Trigger, HTTP Request, IF, Set Variable)
 - `POST /executions/test` — run a workflow synchronously and return the result
+- Handle-aware branching for IF node (true/false paths executed/skipped accurately)
 
 **Done when:** clicking "Test workflow" in the UI actually calls the real nodes and shows real output.
 
 ---
 
-## Phase 6 — Async Execution via Queue
+## Phase 6 — Async Execution via Queue --done
 
 Goal: move execution off the request thread, matching the real architecture.
 
@@ -94,32 +95,33 @@ Goal: move execution off the request thread, matching the real architecture.
 - Separate worker process consumes the queue, runs the node engine
 - `Execution` + `ExecutionData` rows written per run; status tracked (running/success/failed)
 - `POST /executions/start`, `GET /executions`, `GET /executions/:id`, `GET /executions/:id/logs`
-- Frontend: execution history list + a single execution's detail/log view
+- Frontend: execution history list + a single execution's detail/log view, editor direct run button
 
 **Done when:** starting a workflow returns immediately, and you can watch its status update from "running" to "success"/"failed" via polling or a refresh.
 
 ---
 
-## Phase 7 — Triggers (Webhook + Schedule)
+## Phase 7 — Triggers (Webhook + Schedule) --done
 
 Goal: workflows can start themselves, not just be manually triggered.
 
 - `POST /webhooks/:id` — public endpoint that enqueues the target workflow
 - Scheduler (cron) using a lightweight scheduler tied into BullMQ's repeatable jobs
-- Trigger config UI on the relevant node types
+- Trigger config UI on the relevant node types (Webhook URL generation & copy, Cron expression configuration)
 
 **Done when:** a workflow with a Webhook trigger fires from an external `curl`, and one with a Schedule trigger fires on its own.
 
 ---
 
-## Phase 8 — Credentials Manager
+## Phase 8 — Credentials Manager --done
 
 Goal: nodes can use secrets (API keys, DB creds) without storing them in plaintext.
 
-- `Credential` model wired to encrypt/decrypt (AES, key from env)
-- `GET/POST/PATCH/DELETE /credentials`
-- Credential picker in node config UI
-- HTTP Request / AI nodes read from a selected credential at execution time
+- `Credential` model wired to encrypt/decrypt (AES-256-GCM, 32-byte key from env)
+- `GET/POST/PATCH/DELETE /credentials` (workspace-level secret storage)
+- Credential management UI in Workspace dashboard
+- Credential picker in node config UI for HTTP Request nodes
+- HTTP Request node reads from selected credential and injects into Bearer header at execution time
 
 **Done when:** you can save an API key as a credential and have a node use it, without the raw key ever hitting the frontend after save.
 

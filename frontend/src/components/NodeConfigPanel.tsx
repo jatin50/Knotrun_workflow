@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getNodeTypeDef, type NodeConfig } from "../nodes/nodeTypes";
+import type { Credential } from "../lib/credential.api";
 
 interface Props {
   nodeType: string;
@@ -8,6 +9,7 @@ interface Props {
   onDelete: () => void;
   onClose: () => void;
   webhookUrl?: string | null;
+  credentials?: Credential[];
 }
 
 function NodeConfigPanel({
@@ -17,6 +19,7 @@ function NodeConfigPanel({
   onDelete,
   onClose,
   webhookUrl,
+  credentials = [],
 }: Props) {
   const def = getNodeTypeDef(nodeType);
   const [copied, setCopied] = useState(false);
@@ -33,7 +36,7 @@ function NodeConfigPanel({
   }
 
   return (
-    <div className="w-72 shrink-0 border-l border-slate-800 bg-slate-900/50 p-4 space-y-4">
+    <div className="w-80 shrink-0 border-l border-slate-800 bg-slate-900/50 p-4 space-y-4 overflow-y-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-100">{def.label}</h2>
         <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-sm">
@@ -50,7 +53,7 @@ function NodeConfigPanel({
           {webhookUrl ? (
             <>
               <label className="text-xs text-slate-400">Webhook URL</label>
-              <div className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs text-slate-300 break-all">
+              <div className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs text-slate-300 break-all font-mono">
                 {webhookUrl}
               </div>
               <button
@@ -113,6 +116,31 @@ function NodeConfigPanel({
               className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm outline-none focus:border-slate-500"
             />
           </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Authentication / Credential</label>
+            <select
+              value={(configuration.credentialId as string) ?? ""}
+              onChange={(e) => set("credentialId", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm outline-none focus:border-slate-500"
+            >
+              <option value="">None (No Auth)</option>
+              {credentials.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.type})
+                </option>
+              ))}
+            </select>
+            {Boolean(configuration.credentialId) && (
+              <p className="text-[11px] text-emerald-400">
+                Resolved credential will be injected into Authorization: Bearer header at runtime.
+              </p>
+            )}
+            {credentials.length === 0 && (
+              <p className="text-[11px] text-slate-500">
+                No credentials found. Add credentials in your Workspace settings.
+              </p>
+            )}
+          </div>
         </>
       )}
 
@@ -125,6 +153,9 @@ function NodeConfigPanel({
             placeholder="e.g. input.status === 200"
             className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm outline-none focus:border-slate-500"
           />
+          <p className="text-xs text-slate-500">
+            Expression with access to `input` (upstream data) and `variables`.
+          </p>
         </div>
       )}
 
@@ -135,6 +166,7 @@ function NodeConfigPanel({
             <input
               value={(configuration.key as string) ?? ""}
               onChange={(e) => set("key", e.target.value)}
+              placeholder="e.g. userId"
               className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm outline-none focus:border-slate-500"
             />
           </div>
@@ -143,6 +175,7 @@ function NodeConfigPanel({
             <input
               value={(configuration.value as string) ?? ""}
               onChange={(e) => set("value", e.target.value)}
+              placeholder="e.g. 12345 or string"
               className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm outline-none focus:border-slate-500"
             />
           </div>

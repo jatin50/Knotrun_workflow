@@ -30,4 +30,6 @@ export interface EngineNode {
 export interface EngineConnection {
   sourceNode: string;
   targetNode: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
 }
