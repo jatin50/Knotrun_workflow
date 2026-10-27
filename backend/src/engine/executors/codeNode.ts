@@ -1,18 +1,11 @@
 import { NodeExecutor } from "../types";
-
-const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+import { runInSandbox } from "../sandbox";
 
 const codeNode: NodeExecutor = async (config, input, context) => {
   const code = (config.code as string) || "return input;";
 
   try {
-    const fn = new AsyncFunction(
-      "input",
-      "variables",
-      `"use strict";\n${code}`
-    );
-
-    const result = await fn(input, context.variables);
+    const result = runInSandbox(code, input, context.variables, 3000);
     return result !== undefined ? result : null;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Code execution error";
