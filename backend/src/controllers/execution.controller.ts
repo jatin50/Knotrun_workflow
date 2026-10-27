@@ -16,6 +16,8 @@ interface DbConnection {
   targetHandle: string | null;
 }
 
+const TEST_RUN_TIMEOUT_MS = 15_000; // 15-second cap on synchronous in-process test runs
+
 export async function testWorkflow(req: Request, res: Response) {
   const userId = req.user!.userId;
   const id = req.params.id as string;
@@ -44,7 +46,7 @@ export async function testWorkflow(req: Request, res: Response) {
     }));
     const resolvedNodes = await resolveNodeCredentials(plainNodes, workflow.workspaceId);
 
-    const { status, results } = await runWorkflowTest(
+    const testExecutionPromise = runWorkflowTest(
       resolvedNodes,
       connections.map((c: DbConnection) => ({
         sourceNode: c.sourceNode,
@@ -54,10 +56,22 @@ export async function testWorkflow(req: Request, res: Response) {
       }))
     );
 
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              "Synchronous test execution timed out after 15 seconds. Use 'Run (Queue)' for long-running workflows."
+            )
+          ),
+        TEST_RUN_TIMEOUT_MS
+      )
+    );
+
+    const { status, results } = await Promise.race([testExecutionPromise, timeoutPromise]);
+
     return res.json({ status, results });
   } catch (err) {
-    // Only a structural problem (e.g. a cycle) reaches here — per-node
-    // failures are captured inside `results` instead of throwing.
     const message = err instanceof Error ? err.message : "Unknown error";
     return res.status(400).json({ error: message });
   }
