@@ -31,6 +31,56 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: n8n_clone_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      CORS_ORIGIN: "http://localhost:5173"
+      DATABASE_URL: "postgresql://n8n_clone:n8n_clone@postgres:5432/n8n_clone?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "docker-jwt-secret-key-32-chars-long-minimum-secure"
+      JWT_REFRESH_SECRET: "docker-jwt-refresh-secret-key-32-chars-long-minimum"
+      CREDENTIALS_ENCRYPTION_KEY: "931caf9d160dfe70d276438067f33e4444dba2e06207b9ccaf2de578dc6d3f6e"
+    ports:
+      - "4000:4000"
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: n8n_clone_worker
+    restart: unless-stopped
+    command: ["node", "dist/worker.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://n8n_clone:n8n_clone@postgres:5432/n8n_clone?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      CREDENTIALS_ENCRYPTION_KEY: "931caf9d160dfe70d276438067f33e4444dba2e06207b9ccaf2de578dc6d3f6e"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: n8n_clone_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
 volumes:
   postgres_data:
   redis_data:

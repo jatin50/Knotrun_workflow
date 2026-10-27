@@ -140,18 +140,18 @@ Goal: go from 4 starter nodes to a real, demo-able library.
 
 ---
 
-## Phase 10 — Polish for Demo/Resume
+## Phase 10 — Polish for Demo/Resume --done
 
 Goal: the project looks and behaves like a real product, not a prototype.
 
-- Error handling + user-facing error states (frontend and API)
-- Logging (Winston) and basic request/execution observability
-- Loading states, empty states, basic responsive layout pass
-- README rewrite: what it is, screenshots/GIF, how to run locally, architecture diagram link
-- (Optional, time permitting) Docker Compose "one command" full-stack startup
-- (Optional, time permitting) Deploy a live demo
+- 1-minute automated setup script (`scripts/setup.mjs`) for zero-friction cloning and startup
+- Unified multi-service dev runner (`scripts/dev.mjs`) launching API, Worker, and UI
+- Full-stack Docker Compose configuration with containerized backend, worker, frontend, postgres, and redis
+- Comprehensive developer documentation in README.md with architecture diagrams and quickstart options
+- Database seed script with pre-built showcase workflow ("Showcase: Data Transform & Branching") and demo account
+- Clean build checks across TypeScript backend and Vite frontend
 
-**Done when:** a stranger can clone the repo, follow the README, and get a working demo in under 10 minutes — and you have a GIF/screenshot for your resume/portfolio link.
+**Done when:** a stranger can clone the repo, follow the README, and get a working demo in under 1 minute.
 
 ---
 
