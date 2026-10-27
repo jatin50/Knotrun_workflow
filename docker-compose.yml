@@ -4,9 +4,9 @@ services:
     container_name: n8n_clone_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: n8n_clone
-      POSTGRES_PASSWORD: n8n_clone
-      POSTGRES_DB: n8n_clone
+      POSTGRES_USER: ${POSTGRES_USER:-n8n_clone}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8n_clone}
+      POSTGRES_DB: ${POSTGRES_DB:-n8n_clone}
     ports:
       - "5432:5432"
     volumes:
@@ -42,14 +42,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - ./backend/.env
     environment:
       PORT: 4000
       CORS_ORIGIN: "http://localhost:5173"
-      DATABASE_URL: "postgresql://n8n_clone:n8n_clone@postgres:5432/n8n_clone?schema=public"
-      REDIS_URL: "redis://redis:6379"
-      JWT_SECRET: "docker-jwt-secret-key-32-chars-long-minimum-secure"
-      JWT_REFRESH_SECRET: "docker-jwt-refresh-secret-key-32-chars-long-minimum"
-      CREDENTIALS_ENCRYPTION_KEY: "931caf9d160dfe70d276438067f33e4444dba2e06207b9ccaf2de578dc6d3f6e"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://n8n_clone:n8n_clone@postgres:5432/n8n_clone?schema=public}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     ports:
       - "4000:4000"
 
@@ -65,10 +64,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - ./backend/.env
     environment:
-      DATABASE_URL: "postgresql://n8n_clone:n8n_clone@postgres:5432/n8n_clone?schema=public"
-      REDIS_URL: "redis://redis:6379"
-      CREDENTIALS_ENCRYPTION_KEY: "931caf9d160dfe70d276438067f33e4444dba2e06207b9ccaf2de578dc6d3f6e"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://n8n_clone:n8n_clone@postgres:5432/n8n_clone?schema=public}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
 
   frontend:
     build:
