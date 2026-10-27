@@ -435,6 +435,394 @@ function NodeConfigPanel({
         </div>
       )}
 
+      {/* WEBSITE PINGER / KEEP-ALIVE */}
+      {def.type === "network.ping" && (
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Website URL (supports expressions)</label>
+            <input
+              value={(configuration.url as string) ?? ""}
+              onChange={(e) => set("url", e.target.value)}
+              placeholder="https://my-app.onrender.com/health"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+            <p className="text-[10px] text-slate-500">
+              Pings the target to check health and prevent free-tier instances (Render, Railway, Supabase) from idling to sleep.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Method</label>
+              <select
+                value={(configuration.method as string) ?? "GET"}
+                onChange={(e) => set("method", e.target.value)}
+                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+              >
+                <option value="GET">GET</option>
+                <option value="HEAD">HEAD (faster)</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Timeout (sec)</label>
+              <input
+                type="number"
+                min={2}
+                max={30}
+                value={(configuration.timeoutSeconds as number) ?? 10}
+                onChange={(e) => set("timeoutSeconds", Number(e.target.value))}
+                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RESPOND TO WEBHOOK */}
+      {def.type === "webhook.respond" && (
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">HTTP Status Code</label>
+            <input
+              type="number"
+              value={(configuration.statusCode as number) ?? 200}
+              onChange={(e) => set("statusCode", Number(e.target.value))}
+              placeholder="200"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500 font-mono"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Response Payload (JSON or Text)</label>
+            <textarea
+              value={(configuration.responseBody as string) ?? ""}
+              onChange={(e) => set("responseBody", e.target.value)}
+              placeholder='{\n  "success": true,\n  "data": "{{ input }}"\n}'
+              rows={5}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 p-2 text-xs font-mono outline-none focus:border-slate-500"
+            />
+            <p className="text-[10px] text-slate-500">
+              Payload returned synchronously to external clients that triggered this workflow via webhook.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* SEND EMAIL */}
+      {def.type === "communication.email" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Recipient (To)</label>
+            <input
+              value={(configuration.to as string) ?? ""}
+              onChange={(e) => set("to", e.target.value)}
+              placeholder="user@example.com or {{ input.email }}"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500 font-mono"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Sender (From)</label>
+            <input
+              value={(configuration.from as string) ?? "noreply@automation.local"}
+              onChange={(e) => set("from", e.target.value)}
+              placeholder="noreply@yourdomain.com"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Subject</label>
+            <input
+              value={(configuration.subject as string) ?? ""}
+              onChange={(e) => set("subject", e.target.value)}
+              placeholder="Workflow Alert: {{ input.title }}"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Email Body (HTML or Text)</label>
+            <textarea
+              value={(configuration.body as string) ?? ""}
+              onChange={(e) => set("body", e.target.value)}
+              placeholder="<p>New event occurred: {{ input.message }}</p>"
+              rows={4}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 p-2 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Resend / SendGrid API Credential</label>
+            <select
+              value={(configuration.credentialId as string) ?? ""}
+              onChange={(e) => set("credentialId", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            >
+              <option value="">Simulated Dispatch (Local Log)</option>
+              {credentials.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.type})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* SWITCH ROUTER */}
+      {def.type === "logic.switch" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Target Value Expression</label>
+            <input
+              value={(configuration.value as string) ?? ""}
+              onChange={(e) => set("value", e.target.value)}
+              placeholder="{{ input.status }}"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Default Branch</label>
+            <input
+              value={(configuration.defaultOutput as string) ?? "default"}
+              onChange={(e) => set("defaultOutput", e.target.value)}
+              placeholder="default"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+          <p className="text-[10px] text-slate-500">
+            Routes execution flow based on matching evaluated values against defined cases.
+          </p>
+        </div>
+      )}
+
+      {/* FILTER DATA */}
+      {def.type === "data.filter" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Property / Field (leave empty for value itself)</label>
+            <input
+              value={(configuration.field as string) ?? ""}
+              onChange={(e) => set("field", e.target.value)}
+              placeholder="status, amount, email..."
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Operator</label>
+            <select
+              value={(configuration.operator as string) ?? "equals"}
+              onChange={(e) => set("operator", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            >
+              <option value="equals">Equals</option>
+              <option value="not_equals">Does Not Equal</option>
+              <option value="contains">Contains</option>
+              <option value="not_contains">Does Not Contain</option>
+              <option value="greater_than">Greater Than (&gt;)</option>
+              <option value="less_than">Less Than (&lt;)</option>
+              <option value="is_empty">Is Empty</option>
+              <option value="is_not_empty">Is Not Empty</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Expected Value</label>
+            <input
+              value={(configuration.value as string) ?? ""}
+              onChange={(e) => set("value", e.target.value)}
+              placeholder="active, 100, etc."
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* CSV CONVERTER */}
+      {def.type === "data.csv" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Conversion Mode</label>
+            <select
+              value={(configuration.mode as string) ?? "jsonToCsv"}
+              onChange={(e) => set("mode", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            >
+              <option value="jsonToCsv">JSON Array &rarr; CSV String</option>
+              <option value="csvToJson">CSV String &rarr; JSON Array</option>
+            </select>
+          </div>
+          <p className="text-[10px] text-slate-500">
+            Automatically formats arrays of objects to CSV or parses incoming CSV files/strings into JSON.
+          </p>
+        </div>
+      )}
+
+      {/* CRYPTO & HASHES */}
+      {def.type === "crypto.hash" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Operation</label>
+            <select
+              value={(configuration.operation as string) ?? "sha256"}
+              onChange={(e) => set("operation", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            >
+              <option value="sha256">SHA-256 Hash</option>
+              <option value="sha512">SHA-512 Hash</option>
+              <option value="md5">MD5 Hash</option>
+              <option value="hmac_sha256">HMAC-SHA256 (Signed)</option>
+              <option value="base64_encode">Base64 Encode</option>
+              <option value="base64_decode">Base64 Decode</option>
+              <option value="random_uuid">Generate UUID v4</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Input Text</label>
+            <input
+              value={(configuration.text as string) ?? ""}
+              onChange={(e) => set("text", e.target.value)}
+              placeholder="{{ input.token || input }}"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+          {configuration.operation === "hmac_sha256" && (
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">HMAC Secret</label>
+              <input
+                value={(configuration.secret as string) ?? ""}
+                onChange={(e) => set("secret", e.target.value)}
+                placeholder="Secret key..."
+                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TEXT OPERATIONS */}
+      {def.type === "data.text" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Operation</label>
+            <select
+              value={(configuration.operation as string) ?? "trim"}
+              onChange={(e) => set("operation", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            >
+              <option value="trim">Trim Whitespace</option>
+              <option value="uppercase">Uppercase</option>
+              <option value="lowercase">Lowercase</option>
+              <option value="length">Count Characters (Length)</option>
+              <option value="regex_extract">Regex Extract</option>
+              <option value="regex_replace">Regex Replace</option>
+              <option value="substring">Substring (Slice)</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Input Text</label>
+            <input
+              value={(configuration.text as string) ?? ""}
+              onChange={(e) => set("text", e.target.value)}
+              placeholder="{{ input.title }}"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+          {["regex_extract", "regex_replace"].includes((configuration.operation as string) || "") && (
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Regex Pattern</label>
+              <input
+                value={(configuration.pattern as string) ?? ""}
+                onChange={(e) => set("pattern", e.target.value)}
+                placeholder="[a-zA-Z0-9]+ or (\d+)"
+                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+              />
+            </div>
+          )}
+          {configuration.operation === "regex_replace" && (
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Replacement</label>
+              <input
+                value={(configuration.replacement as string) ?? ""}
+                onChange={(e) => set("replacement", e.target.value)}
+                placeholder="Replacement text"
+                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MATH OPERATIONS */}
+      {def.type === "math.calculate" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Operation</label>
+            <select
+              value={(configuration.operation as string) ?? "add"}
+              onChange={(e) => set("operation", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            >
+              <option value="add">Add (+)</option>
+              <option value="subtract">Subtract (-)</option>
+              <option value="multiply">Multiply (*)</option>
+              <option value="divide">Divide (/)</option>
+              <option value="percentage">Percentage (%)</option>
+              <option value="round">Round</option>
+              <option value="ceil">Ceil (Round Up)</option>
+              <option value="floor">Floor (Round Down)</option>
+              <option value="min">Min</option>
+              <option value="max">Max</option>
+              <option value="abs">Absolute Value</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Value A</label>
+            <input
+              value={(configuration.valueA as string) ?? ""}
+              onChange={(e) => set("valueA", e.target.value)}
+              placeholder="{{ input.price || 0 }}"
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+          {!["round", "ceil", "floor", "abs"].includes((configuration.operation as string) || "") && (
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Value B</label>
+              <input
+                value={(configuration.valueB as string) ?? ""}
+                onChange={(e) => set("valueB", e.target.value)}
+                placeholder="10"
+                className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DATA AGGREGATOR */}
+      {def.type === "logic.aggregate" && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Operation</label>
+            <select
+              value={(configuration.operation as string) ?? "sum"}
+              onChange={(e) => set("operation", e.target.value)}
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs outline-none focus:border-slate-500"
+            >
+              <option value="sum">Sum</option>
+              <option value="average">Average</option>
+              <option value="count">Count Items</option>
+              <option value="min">Min Value</option>
+              <option value="max">Max Value</option>
+              <option value="concatenate">Concatenate (Join)</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Object Property (e.g. price in items)</label>
+            <input
+              value={(configuration.property as string) ?? ""}
+              onChange={(e) => set("property", e.target.value)}
+              placeholder="amount, score, id..."
+              className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-xs font-mono outline-none focus:border-slate-500"
+            />
+          </div>
+        </div>
+      )}
+
       <button
         onClick={onDelete}
         className="text-xs text-red-400 hover:text-red-300 transition pt-3 border-t border-slate-800 w-full text-left font-medium"

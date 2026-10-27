@@ -40,7 +40,7 @@ export const NODE_TYPES: NodeTypeDef[] = [
     summarize: (c) => `Runs on: ${(c.cron as string) || "(no schedule set)"}`,
   },
 
-  // --- ACTIONS & HTTP ---
+  // --- ACTIONS & NETWORK ---
   {
     type: "http.request",
     label: "HTTP Request",
@@ -50,6 +50,33 @@ export const NODE_TYPES: NodeTypeDef[] = [
     defaultConfig: { method: "GET", url: "", credentialId: "", body: "" },
     summarize: (c) =>
       `${(c.method as string) || "GET"} ${(c.url as string) || "(no URL set)"}${c.credentialId ? " [Cred]" : ""}`,
+  },
+  {
+    type: "network.ping",
+    label: "Website Pinger",
+    category: "action",
+    color: "lime",
+    hasInput: true,
+    defaultConfig: {
+      url: "https://",
+      method: "GET",
+      timeoutSeconds: 10,
+      expectedStatus: 200,
+    },
+    summarize: (c) =>
+      `Ping ${(c.url as string) || "(no URL)"}`,
+  },
+  {
+    type: "webhook.respond",
+    label: "Respond to Webhook",
+    category: "action",
+    color: "orange",
+    hasInput: true,
+    defaultConfig: {
+      statusCode: 200,
+      responseBody: '{\n  "success": true,\n  "data": "{{ input }}"\n}',
+    },
+    summarize: (c) => `HTTP ${c.statusCode ?? 200} response`,
   },
 
   // --- AI ---
@@ -102,8 +129,24 @@ export const NODE_TYPES: NodeTypeDef[] = [
     summarize: (c) =>
       `Notify ${(c.platform as string) || "Webhook"}`,
   },
+  {
+    type: "communication.email",
+    label: "Send Email",
+    category: "communication",
+    color: "rose",
+    hasInput: true,
+    defaultConfig: {
+      to: "",
+      from: "noreply@automation.local",
+      subject: "Workflow Alert: {{ input.title || 'Notification' }}",
+      body: "<p>New workflow trigger received.</p>",
+      credentialId: "",
+    },
+    summarize: (c) =>
+      c.to ? `To: ${c.to}` : "No recipient set",
+  },
 
-  // --- LOGIC ---
+  // --- LOGIC & FLOW CONTROL ---
   {
     type: "logic.if",
     label: "IF",
@@ -114,6 +157,22 @@ export const NODE_TYPES: NodeTypeDef[] = [
     summarize: (c) => (c.condition ? `if ${c.condition}` : "No condition set"),
   },
   {
+    type: "logic.switch",
+    label: "Switch Router",
+    category: "logic",
+    color: "amber",
+    hasInput: true,
+    defaultConfig: {
+      value: "{{ input.status }}",
+      rules: [
+        { value: "approved", outputName: "approved" },
+        { value: "rejected", outputName: "rejected" },
+      ],
+      defaultOutput: "default",
+    },
+    summarize: (c) => `Switch on ${c.value || "input"}`,
+  },
+  {
     type: "logic.wait",
     label: "Wait / Delay",
     category: "logic",
@@ -122,8 +181,21 @@ export const NODE_TYPES: NodeTypeDef[] = [
     defaultConfig: { seconds: 2 },
     summarize: (c) => `Wait ${c.seconds ?? 2}s`,
   },
+  {
+    type: "data.filter",
+    label: "Filter Data",
+    category: "logic",
+    color: "teal",
+    hasInput: true,
+    defaultConfig: {
+      field: "status",
+      operator: "equals",
+      value: "active",
+    },
+    summarize: (c) => `${c.field || "value"} ${c.operator || "=="} ${c.value || "''"}`,
+  },
 
-  // --- DATA & CODE ---
+  // --- DATA & TRANSFORMATION ---
   {
     type: "data.setVariable",
     label: "Set Variable",
@@ -143,6 +215,71 @@ export const NODE_TYPES: NodeTypeDef[] = [
       code: "// Transform or compute input data\nreturn {\n  ...input,\n  timestamp: new Date().toISOString()\n};",
     },
     summarize: () => "JavaScript custom logic",
+  },
+  {
+    type: "data.csv",
+    label: "CSV Converter",
+    category: "data",
+    color: "emerald",
+    hasInput: true,
+    defaultConfig: {
+      mode: "jsonToCsv",
+      csvData: "",
+    },
+    summarize: (c) => (c.mode === "csvToJson" ? "CSV -> JSON" : "JSON -> CSV"),
+  },
+  {
+    type: "crypto.hash",
+    label: "Crypto & Hashes",
+    category: "data",
+    color: "fuchsia",
+    hasInput: true,
+    defaultConfig: {
+      operation: "sha256",
+      text: "{{ input.data || input }}",
+      secret: "",
+    },
+    summarize: (c) => `${c.operation || "sha256"} hash`,
+  },
+  {
+    type: "data.text",
+    label: "Text Operations",
+    category: "data",
+    color: "sky",
+    hasInput: true,
+    defaultConfig: {
+      operation: "trim",
+      text: "{{ input.text || input }}",
+      pattern: "",
+      replacement: "",
+    },
+    summarize: (c) => `Text: ${c.operation || "transform"}`,
+  },
+  {
+    type: "math.calculate",
+    label: "Math Operations",
+    category: "data",
+    color: "blue",
+    hasInput: true,
+    defaultConfig: {
+      operation: "add",
+      valueA: "{{ input.price || 0 }}",
+      valueB: "10",
+    },
+    summarize: (c) => `Math: ${c.operation || "add"}`,
+  },
+  {
+    type: "logic.aggregate",
+    label: "Data Aggregator",
+    category: "data",
+    color: "purple",
+    hasInput: true,
+    defaultConfig: {
+      operation: "sum",
+      property: "amount",
+      separator: ", ",
+    },
+    summarize: (c) => `Aggregate: ${c.operation || "sum"}`,
   },
 ];
 

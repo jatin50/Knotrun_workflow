@@ -16,6 +16,10 @@ const ACCENT_CLASSES: Record<string, { border: string; dot: string }> = {
   blue: { border: "border-blue-600", dot: "bg-blue-500" },
   pink: { border: "border-pink-600", dot: "bg-pink-500" },
   cyan: { border: "border-cyan-600", dot: "bg-cyan-500" },
+  orange: { border: "border-orange-600", dot: "bg-orange-500" },
+  lime: { border: "border-lime-600", dot: "bg-lime-500" },
+  fuchsia: { border: "border-fuchsia-600", dot: "bg-fuchsia-500" },
+  rose: { border: "border-rose-600", dot: "bg-rose-500" },
 };
 
 export interface WorkflowNodeData {

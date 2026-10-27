@@ -11,6 +11,10 @@ const ACCENT_DOT: Record<string, string> = {
   blue: "bg-blue-500",
   pink: "bg-pink-500",
   cyan: "bg-cyan-500",
+  orange: "bg-orange-500",
+  lime: "bg-lime-500",
+  fuchsia: "bg-fuchsia-500",
+  rose: "bg-rose-500",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
