@@ -1,5 +1,6 @@
 import { NodeExecutor } from "../types";
 import { interpolate } from "../../utils/interpolate";
+import { validateUrl } from "../../utils/ssrf";
 
 const webhookNotification: NodeExecutor = async (config, input, context) => {
   const platform = (config.platform as string) || "slack";
@@ -15,6 +16,9 @@ const webhookNotification: NodeExecutor = async (config, input, context) => {
       "Communication node has no Webhook URL configured. Please provide a URL or select a Credential."
     );
   }
+
+  // Enforce SSRF validation
+  validateUrl(webhookUrl);
 
   const rawMessage = (config.message as string) || "Workflow notification triggered";
   const message = interpolate(rawMessage, input, context.variables);

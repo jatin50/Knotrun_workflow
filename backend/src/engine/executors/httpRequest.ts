@@ -1,5 +1,6 @@
 import { NodeExecutor } from "../types";
 import { interpolate } from "../../utils/interpolate";
+import { validateUrl } from "../../utils/ssrf";
 
 const httpRequest: NodeExecutor = async (config, input, context) => {
   const method = ((config.method as string) || "GET").toUpperCase();
@@ -11,6 +12,9 @@ const httpRequest: NodeExecutor = async (config, input, context) => {
   if (!url) {
     throw new Error("HTTP Request node has no URL configured");
   }
+
+  // Enforce SSRF validation (blocks loopback, cloud metadata, private IPs)
+  validateUrl(url);
 
   const headers: Record<string, string> = {};
   if (secretToken) {
