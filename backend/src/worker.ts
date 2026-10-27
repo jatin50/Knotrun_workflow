@@ -30,9 +30,25 @@ async function processJob(job: Job<ExecutionJobData>) {
   let { executionId } = job.data;
   const startedAt = new Date();
 
+  // Retrieve workflow metadata to check active state and workspace
+  const workflow = await prisma.workflow.findUnique({
+    where: { id: workflowId },
+    select: { workspaceId: true, active: true },
+  });
+
+  if (!workflow) {
+    console.warn(`[Worker] Workflow ${workflowId} not found. Skipping execution.`);
+    return;
+  }
+
+  // If this was triggered automatically by a schedule job, ignore if workflow is inactive
+  if (!executionId && !workflow.active) {
+    console.log(`[Worker] Skipping scheduled execution: workflow ${workflowId} is inactive.`);
+    return;
+  }
+
   // A schedule tick has no pre-created Execution row (nothing called an
-  // endpoint to make one) — it makes its own here, the moment it actually
-  // fires.
+  // endpoint to make one) — it makes its own here, the moment it actually fires.
   if (!executionId) {
     const execution = await prisma.execution.create({
       data: { workflowId, status: "RUNNING", startedAt },
@@ -45,8 +61,7 @@ async function processJob(job: Job<ExecutionJobData>) {
     });
   }
 
-  const [workflow, nodes, connections] = await Promise.all([
-    prisma.workflow.findUniqueOrThrow({ where: { id: workflowId }, select: { workspaceId: true } }),
+  const [nodes, connections] = await Promise.all([
     prisma.node.findMany({ where: { workflowId } }),
     prisma.connection.findMany({ where: { workflowId } }),
   ]);
@@ -69,16 +84,24 @@ async function processJob(job: Job<ExecutionJobData>) {
     }));
     const resolvedNodes = await resolveNodeCredentials(plainNodes, workflow.workspaceId);
 
-    const { status, results } = await runWorkflowTest(
-      resolvedNodes,
-      connections.map((c: DbConnection) => ({
-        sourceNode: c.sourceNode,
-        targetNode: c.targetNode,
-        sourceHandle: c.sourceHandle,
-        targetHandle: c.targetHandle,
-      })),
-      triggerOverrides
+    // Hard execution cap for background worker jobs to prevent thread starvation
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Worker execution exceeded maximum 60s timeout")), 60_000)
     );
+
+    const { status, results } = await Promise.race([
+      runWorkflowTest(
+        resolvedNodes,
+        connections.map((c: DbConnection) => ({
+          sourceNode: c.sourceNode,
+          targetNode: c.targetNode,
+          sourceHandle: c.sourceHandle,
+          targetHandle: c.targetHandle,
+        })),
+        triggerOverrides
+      ),
+      timeoutPromise,
+    ]);
 
     const finishedAt = new Date();
 
@@ -117,8 +140,7 @@ async function processJob(job: Job<ExecutionJobData>) {
       }),
     ]);
   } catch (err) {
-    // Only a structural failure (e.g. a cycle) reaches here — per-node
-    // failures are already captured inside `results` above.
+    // Structural failures or worker timeouts
     const finishedAt = new Date();
     await prisma.execution.update({
       where: { id: executionId },
