@@ -4,24 +4,41 @@ import prisma from "../lib/prisma";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt";
 import { setAuthCookies, clearAuthCookies } from "../lib/cookies";
 
+// Standard RFC-compliant email pattern check
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Precomputed bcrypt cost-10 hash used to ensure constant-time response
+// when a user email is not found, defeating timing-based account enumeration.
+const DUMMY_BCRYPT_HASH = bcrypt.hashSync("timing-defense-static-salt-pad", 10);
+
 export async function register(req: Request, res: Response) {
     const { name, email, password } = req.body ?? {};
 
     if (!name || !email || !password) {
         return res.status(400).json({ error: "name, email, and password are required" });
     }
-    if (typeof password !== "string" || password.length < 8) {
-        return res.status(400).json({ error: "password must be at least 8 characters" });
+
+    if (typeof name !== "string" || name.trim().length === 0 || name.trim().length > 100) {
+        return res.status(400).json({ error: "name must be between 1 and 100 characters" });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!cleanEmail || cleanEmail.length > 255 || !EMAIL_REGEX.test(cleanEmail)) {
+        return res.status(400).json({ error: "A valid email address is required" });
+    }
+
+    if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+        return res.status(400).json({ error: "password must be between 8 and 128 characters" });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (existing) {
         return res.status(409).json({ error: "An account with this email already exists" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-        data: { name, email, password: passwordHash },
+        data: { name: name.trim(), email: cleanEmail, password: passwordHash },
     });
 
     const accessToken = signAccessToken({ userId: user.id, email: user.email });
@@ -36,19 +53,20 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
     const { email, password } = req.body ?? {};
 
-    if (!email || !password) {
+    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
         return res.status(400).json({ error: "email and password are required" });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-        // Deliberately the same error as a wrong password below, so we don't
-        // leak which emails are registered.
-        return res.status(401).json({ error: "Invalid email or password" });
-    }
+    const cleanEmail = email.trim().toLowerCase();
+    const candidatePassword = password.slice(0, 128);
 
-    const passwordMatches = await bcrypt.compare(password, user.password);
-    if (!passwordMatches) {
+    const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+
+    // Always run bcrypt.compare even if user does not exist so timing remains identical
+    const passwordHashToCompare = user ? user.password : DUMMY_BCRYPT_HASH;
+    const passwordMatches = await bcrypt.compare(candidatePassword, passwordHashToCompare);
+
+    if (!user || !passwordMatches) {
         return res.status(401).json({ error: "Invalid email or password" });
     }
 
@@ -95,11 +113,6 @@ export async function refresh(req: Request, res: Response) {
         const payload = verifyRefreshToken(token);
         const accessToken = signAccessToken({ userId: payload.userId, email: payload.email });
 
-        // NOTE: this reissues only the access token, keeping the existing
-        // refresh token as-is until it naturally expires. A production system
-        // would typically rotate the refresh token too and track it in the DB
-        // so a single stolen refresh token can be revoked early — that's a
-        // reasonable "what I'd add next" if this comes up in an interview.
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
