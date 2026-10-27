@@ -34,8 +34,16 @@ export async function createCredential(req: Request, res: Response) {
   const workspaceId = req.params.workspaceId as string;
   const { name, type, value } = req.body ?? {};
 
-  if (!name || !type || !value) {
-    return res.status(400).json({ error: "name, type, and value are required" });
+  if (!name || typeof name !== "string" || name.trim().length === 0 || name.trim().length > 100) {
+    return res.status(400).json({ error: "name must be between 1 and 100 characters" });
+  }
+
+  if (!type || typeof type !== "string" || type.trim().length === 0 || type.trim().length > 50) {
+    return res.status(400).json({ error: "type must be between 1 and 50 characters" });
+  }
+
+  if (!value || typeof value !== "string" || value.length === 0 || value.length > 10_000) {
+    return res.status(400).json({ error: "value must be between 1 and 10,000 characters" });
   }
 
   const workspace = await assertWorkspaceOwnership(workspaceId, userId);
@@ -44,7 +52,7 @@ export async function createCredential(req: Request, res: Response) {
   }
 
   const credential = await prisma.credential.create({
-    data: { workspaceId, name, type, encryptedData: encrypt(String(value)) },
+    data: { workspaceId, name: name.trim(), type: type.trim(), encryptedData: encrypt(value) },
     select: SAFE_SELECT,
   });
 
@@ -56,6 +64,13 @@ export async function updateCredential(req: Request, res: Response) {
   const id = req.params.id as string;
   const { name, value } = req.body ?? {};
 
+  if (name !== undefined && (typeof name !== "string" || name.trim().length === 0 || name.trim().length > 100)) {
+    return res.status(400).json({ error: "name must be between 1 and 100 characters" });
+  }
+  if (value !== undefined && (typeof value !== "string" || value.length === 0 || value.length > 10_000)) {
+    return res.status(400).json({ error: "value must be between 1 and 10,000 characters" });
+  }
+
   const existing = await prisma.credential.findFirst({
     where: { id, workspace: { ownerId: userId } },
   });
@@ -66,8 +81,8 @@ export async function updateCredential(req: Request, res: Response) {
   const credential = await prisma.credential.update({
     where: { id },
     data: {
-      ...(name !== undefined ? { name: String(name) } : {}),
-      ...(value !== undefined ? { encryptedData: encrypt(String(value)) } : {}),
+      ...(name !== undefined ? { name: name.trim() } : {}),
+      ...(value !== undefined ? { encryptedData: encrypt(value) } : {}),
     },
     select: SAFE_SELECT,
   });

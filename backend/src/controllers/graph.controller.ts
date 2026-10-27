@@ -56,8 +56,51 @@ function scheduleJobId(nodeId: string) {
 export async function saveGraph(req: Request, res: Response) {
   const userId = req.user!.userId;
   const id = req.params.id as string;
-  const nodes: IncomingNode[] = req.body?.nodes ?? [];
-  const connections: IncomingConnection[] = req.body?.connections ?? [];
+  const nodes = req.body?.nodes;
+  const connections = req.body?.connections;
+
+  if (!Array.isArray(nodes) || !Array.isArray(connections)) {
+    return res.status(400).json({ error: "nodes and connections must be arrays" });
+  }
+
+  if (nodes.length > 200) {
+    return res.status(400).json({ error: "Maximum workflow node limit exceeded (200 max)" });
+  }
+
+  if (connections.length > 500) {
+    return res.status(400).json({ error: "Maximum workflow connection limit exceeded (500 max)" });
+  }
+
+  const typedNodes: IncomingNode[] = [];
+  for (const n of nodes) {
+    if (!n || typeof n.id !== "string" || !n.id.trim() || n.id.length > 64) {
+      return res.status(400).json({ error: "Invalid node id" });
+    }
+    if (typeof n.type !== "string" || !n.type.trim() || n.type.length > 64) {
+      return res.status(400).json({ error: "Invalid node type" });
+    }
+    typedNodes.push({
+      id: String(n.id).trim(),
+      type: String(n.type).trim(),
+      positionX: Number.isFinite(n.positionX) ? Number(n.positionX) : 0,
+      positionY: Number.isFinite(n.positionY) ? Number(n.positionY) : 0,
+      configuration: (n.configuration && typeof n.configuration === "object") ? n.configuration : {},
+    });
+  }
+
+  const typedConnections: IncomingConnection[] = [];
+  for (const c of connections) {
+    if (!c || typeof c.sourceNode !== "string" || typeof c.targetNode !== "string") {
+      return res.status(400).json({ error: "Connections must specify sourceNode and targetNode" });
+    }
+    typedConnections.push({
+      id: typeof c.id === "string" ? c.id : undefined,
+      sourceNode: String(c.sourceNode).trim(),
+      targetNode: String(c.targetNode).trim(),
+      sourceHandle: typeof c.sourceHandle === "string" ? c.sourceHandle : null,
+      targetHandle: typeof c.targetHandle === "string" ? c.targetHandle : null,
+    });
+  }
 
   const workflow = await assertWorkflowOwnership(id, userId);
   if (!workflow) {
@@ -69,14 +112,13 @@ export async function saveGraph(req: Request, res: Response) {
     existingTriggers.map((t: DbTrigger) => [t.nodeId, t])
   );
 
-
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.connection.deleteMany({ where: { workflowId: id } });
     await tx.node.deleteMany({ where: { workflowId: id } });
 
-    if (nodes.length > 0) {
+    if (typedNodes.length > 0) {
       await tx.node.createMany({
-        data: nodes.map((n) => ({
+        data: typedNodes.map((n) => ({
           id: n.id,
           workflowId: id,
           type: n.type,
@@ -87,9 +129,9 @@ export async function saveGraph(req: Request, res: Response) {
       });
     }
 
-    if (connections.length > 0) {
+    if (typedConnections.length > 0) {
       await tx.connection.createMany({
-        data: connections.map((c) => ({
+        data: typedConnections.map((c) => ({
           workflowId: id,
           sourceNode: c.sourceNode,
           targetNode: c.targetNode,
@@ -99,7 +141,7 @@ export async function saveGraph(req: Request, res: Response) {
       });
     }
 
-    const triggerNodes = nodes.filter(
+    const triggerNodes = typedNodes.filter(
       (n) => n.type === "trigger.webhook" || n.type === "trigger.schedule"
     );
 
@@ -134,13 +176,13 @@ export async function saveGraph(req: Request, res: Response) {
   // transaction (Redis isn't transactional with Postgres) — remove
   // schedules for nodes that no longer exist or are no longer schedule
   // triggers, then (re)register current ones with their current cron.
-  const currentNodeIds = new Set(nodes.map((n) => n.id));
+  const currentNodeIds = new Set(typedNodes.map((n) => n.id));
   const removedOrChangedScheduleNodeIds = existingTriggers
     .filter((t: DbTrigger) => t.type === "schedule")
     .map((t: DbTrigger) => t.nodeId)
     .filter((nodeId: string) => {
       const stillExists = currentNodeIds.has(nodeId);
-      const stillSchedule = nodes.find((n) => n.id === nodeId)?.type === "trigger.schedule";
+      const stillSchedule = typedNodes.find((n) => n.id === nodeId)?.type === "trigger.schedule";
       return !stillExists || !stillSchedule;
     });
 
@@ -148,7 +190,7 @@ export async function saveGraph(req: Request, res: Response) {
     await executionQueue.removeJobScheduler(scheduleJobId(nodeId));
   }
 
-  const scheduleNodes = nodes.filter((n) => n.type === "trigger.schedule");
+  const scheduleNodes = typedNodes.filter((n) => n.type === "trigger.schedule");
   for (const node of scheduleNodes) {
     const cron = (node.configuration as { cron?: string } | undefined)?.cron;
     if (!cron) continue;

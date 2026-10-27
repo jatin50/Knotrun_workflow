@@ -22,10 +22,15 @@ export async function createWorkspace(req: Request, res: Response) {
     return res.status(400).json({ error: "name is required" });
   }
 
-  const slug = await generateUniqueWorkspaceSlug(name);
+  const cleanName = name.trim();
+  if (cleanName.length > 100) {
+    return res.status(400).json({ error: "name must be 100 characters or fewer" });
+  }
+
+  const slug = await generateUniqueWorkspaceSlug(cleanName);
 
   const workspace = await prisma.workspace.create({
-    data: { name: name.trim(), slug, ownerId: userId },
+    data: { name: cleanName, slug, ownerId: userId },
   });
 
   return res.status(201).json({ workspace });
@@ -55,6 +60,11 @@ export async function updateWorkspace(req: Request, res: Response) {
     return res.status(400).json({ error: "name is required" });
   }
 
+  const cleanName = name.trim();
+  if (cleanName.length > 100) {
+    return res.status(400).json({ error: "name must be 100 characters or fewer" });
+  }
+
   const existing = await prisma.workspace.findFirst({ where: { id, ownerId: userId } });
   if (!existing) {
     return res.status(404).json({ error: "Workspace not found" });
@@ -62,7 +72,7 @@ export async function updateWorkspace(req: Request, res: Response) {
 
   const workspace = await prisma.workspace.update({
     where: { id },
-    data: { name: name.trim() },
+    data: { name: cleanName },
   });
 
   return res.json({ workspace });

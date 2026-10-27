@@ -33,6 +33,19 @@ export async function createWorkflow(req: Request, res: Response) {
     return res.status(400).json({ error: "name is required" });
   }
 
+  const cleanName = name.trim();
+  if (cleanName.length > 100) {
+    return res.status(400).json({ error: "name must be 100 characters or fewer" });
+  }
+
+  let cleanDesc: string | null = null;
+  if (description !== undefined && description !== null) {
+    if (typeof description !== "string") {
+      return res.status(400).json({ error: "description must be a string" });
+    }
+    cleanDesc = description.slice(0, 500);
+  }
+
   const workspace = await prisma.workspace.findFirst({
     where: { id: workspaceId, ownerId: userId },
   });
@@ -42,8 +55,8 @@ export async function createWorkflow(req: Request, res: Response) {
 
   const workflow = await prisma.workflow.create({
     data: {
-      name: name.trim(),
-      description: description ?? null,
+      name: cleanName,
+      description: cleanDesc,
       workspaceId,
     },
   });
@@ -71,6 +84,28 @@ export async function updateWorkflow(req: Request, res: Response) {
   const id = req.params.id as string;
   const { name, description, active } = req.body ?? {};
 
+  let cleanName: string | undefined = undefined;
+  if (name !== undefined) {
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "name cannot be empty" });
+    }
+    cleanName = name.trim();
+    if (cleanName.length > 100) {
+      return res.status(400).json({ error: "name must be 100 characters or fewer" });
+    }
+  }
+
+  let cleanDesc: string | null | undefined = undefined;
+  if (description !== undefined) {
+    if (description === null) {
+      cleanDesc = null;
+    } else if (typeof description === "string") {
+      cleanDesc = description.slice(0, 500);
+    } else {
+      return res.status(400).json({ error: "description must be a string or null" });
+    }
+  }
+
   const existing = await prisma.workflow.findFirst({
     where: { id, workspace: { ownerId: userId } },
   });
@@ -81,8 +116,8 @@ export async function updateWorkflow(req: Request, res: Response) {
   const workflow = await prisma.workflow.update({
     where: { id },
     data: {
-      ...(name !== undefined ? { name: String(name).trim() } : {}),
-      ...(description !== undefined ? { description } : {}),
+      ...(cleanName !== undefined ? { name: cleanName } : {}),
+      ...(cleanDesc !== undefined ? { description: cleanDesc } : {}),
       ...(active !== undefined ? { active: Boolean(active) } : {}),
     },
   });
