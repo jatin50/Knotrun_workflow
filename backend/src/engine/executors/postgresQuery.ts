@@ -5,9 +5,20 @@ import { interpolate } from "../../utils/interpolate";
 const FORBIDDEN_TABLES = [
   "users",
   "credentials",
+  "variables",
+  "workspaces",
+  "workflows",
+  "workflow_versions",
+  "nodes",
+  "connections",
+  "triggers",
+  "executions",
+  "execution_data",
   "api_keys",
   "audit_logs",
   "_prisma_migrations",
+  "pg_shadow",
+  "pg_authid",
 ];
 
 const FORBIDDEN_COMMANDS = [
@@ -19,11 +30,15 @@ const FORBIDDEN_COMMANDS = [
   "COPY",
   "VACUUM",
   "REINDEX",
+  "EXEC",
+  "EXECUTE",
+  "PREPARE",
 ];
 
 /**
  * Validates and sanitizes SQL queries to prevent multi-statement execution,
- * destructive administrative commands, and unauthorized access to core platform tables.
+ * dynamic execution tricks, destructive administrative commands, and
+ * unauthorized access to core platform tables.
  */
 function validateSqlQuery(query: string): string {
   const clean = query.trim();
@@ -37,7 +52,7 @@ function validateSqlQuery(query: string): string {
     throw new Error("Execution blocked: Multiple stacked SQL statements in a single node are forbidden.");
   }
 
-  // 2. Block destructive administrative commands
+  // 2. Block destructive administrative or dynamic execution commands
   for (const cmd of FORBIDDEN_COMMANDS) {
     const regex = new RegExp(`\\b${cmd}\\b`, "i");
     if (regex.test(clean)) {
@@ -45,9 +60,9 @@ function validateSqlQuery(query: string): string {
     }
   }
 
-  // 3. Prevent reading or modifying core internal platform tables
+  // 3. Prevent reading or modifying core internal platform tables (including quoted and schema-qualified)
   for (const table of FORBIDDEN_TABLES) {
-    const regex = new RegExp(`\\b${table}\\b`, "i");
+    const regex = new RegExp(`(\\b|"|\\.)${table}(\\b|"|\\s|$)`, "i");
     if (regex.test(clean)) {
       throw new Error(`Execution blocked: Access to internal platform table '${table}' is forbidden.`);
     }
