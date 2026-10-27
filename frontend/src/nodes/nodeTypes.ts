@@ -144,5 +144,15 @@ export const NODE_TYPES: NodeTypeDef[] = [
 ];
 
 export function getNodeTypeDef(type: string): NodeTypeDef {
-  return NODE_TYPES.find((n) => n.type === type) ?? NODE_TYPES[0];
+  const found = NODE_TYPES.find((n) => n.type === type);
+  if (found) return found;
+  return {
+    type,
+    label: type || "Unknown Node",
+    category: "action",
+    color: "indigo",
+    hasInput: true,
+    defaultConfig: {},
+    summarize: () => type,
+  };
 }
