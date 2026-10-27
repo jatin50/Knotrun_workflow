@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { fetchGraph, saveGraph, type ApiNode, type ApiConnection } from "../lib/graph.api";
+import { fetchWorkflow, updateWorkflow } from "../lib/workflow.api";
 import { testWorkflow, type TestRunResult } from "../lib/execution.api";
 import { startWorkflowExecution } from "../lib/executionHistory.api";
 import { fetchTriggers } from "../lib/trigger.api";
@@ -73,6 +74,19 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   const { data: credentials } = useQuery({
     queryKey: ["workflow-credentials", workflowId],
     queryFn: () => fetchWorkflowCredentials(workflowId),
+  });
+
+  const { data: workflow } = useQuery({
+    queryKey: ["workflow", workflowId],
+    queryFn: () => fetchWorkflow(workflowId),
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: (active: boolean) => updateWorkflow(workflowId, { active }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflow", workflowId] });
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+    },
   });
 
   // Sync server data into React Flow's own state exactly once per load —
@@ -199,9 +213,37 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   return (
     <div className="h-screen flex flex-col bg-slate-950">
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2">
-        <Link to=".." relative="path" className="text-sm text-slate-500 hover:text-slate-300">
-          &larr; Back to workspace
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link to=".." relative="path" className="text-sm text-slate-500 hover:text-slate-300">
+            &larr; Back to workspace
+          </Link>
+          <div className="h-4 w-px bg-slate-800" />
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-sm font-semibold text-slate-200 truncate max-w-xs">
+              {workflow?.name ?? "Workflow"}
+            </h1>
+            {workflow && (
+              <button
+                type="button"
+                onClick={() => toggleActiveMutation.mutate(!workflow.active)}
+                disabled={toggleActiveMutation.isPending}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border transition ${
+                  workflow.active
+                    ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/80 hover:bg-emerald-900/60"
+                    : "bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-700"
+                }`}
+                title="Toggle active status (webhooks only trigger active workflows)"
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    workflow.active ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                  }`}
+                />
+                {workflow.active ? "Active" : "Inactive"}
+              </button>
+            )}
+          </div>
+        </div>
         <div className="flex items-center gap-3">
           {runMessage && (
             <span className="text-xs text-indigo-400 animate-pulse">{runMessage}</span>

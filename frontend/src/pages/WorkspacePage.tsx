@@ -6,6 +6,7 @@ import {
   fetchWorkflows,
   createWorkflow,
   renameWorkflow,
+  updateWorkflow,
   deleteWorkflow,
   type Workflow,
 } from "../lib/workflow.api";
@@ -68,6 +69,14 @@ function WorkspacePage() {
 
   const deleteWorkflowMutation = useMutation({
     mutationFn: (id: string) => deleteWorkflow(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflows", workspaceId] });
+    },
+  });
+
+  const toggleWorkflowActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      updateWorkflow(id, { active }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workflows", workspaceId] });
     },
@@ -225,16 +234,39 @@ function WorkspacePage() {
                     </div>
                   ) : (
                     <>
-                      <Link to={`/workflows/${wf.id}`} className="flex-1">
-                        <p className="font-medium text-slate-100 hover:text-indigo-300 transition">
-                          {wf.name}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {wf.active ? "Active" : "Inactive"} · v{wf.version}
-                          {wf.description ? ` · ${wf.description}` : ""}
-                        </p>
+                      <Link to={`/workflows/${wf.id}`} className="flex-1 min-w-0 pr-4">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-slate-100 hover:text-indigo-300 transition truncate">
+                            {wf.name}
+                          </p>
+                          <span className="text-xs text-slate-500 font-mono">v{wf.version}</span>
+                        </div>
+                        {wf.description && (
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">{wf.description}</p>
+                        )}
                       </Link>
-                      <div className="flex gap-3 text-sm">
+                      <div className="flex items-center gap-3 text-sm">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleWorkflowActiveMutation.mutate({ id: wf.id, active: !wf.active });
+                          }}
+                          disabled={toggleWorkflowActiveMutation.isPending}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition ${
+                            wf.active
+                              ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/80 hover:bg-emerald-900/60"
+                              : "bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-700"
+                          }`}
+                          title="Click to toggle active state (active workflows listen for webhooks and schedules)"
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              wf.active ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                            }`}
+                          />
+                          {wf.active ? "Active" : "Inactive"}
+                        </button>
                         <button
                           onClick={() => startRename(wf)}
                           className="text-slate-400 hover:text-slate-200 transition"
