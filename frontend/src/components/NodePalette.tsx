@@ -7,6 +7,20 @@ const ACCENT_DOT: Record<string, string> = {
   indigo: "bg-indigo-500",
   amber: "bg-amber-500",
   sky: "bg-sky-500",
+  violet: "bg-violet-500",
+  blue: "bg-blue-500",
+  pink: "bg-pink-500",
+  cyan: "bg-cyan-500",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  trigger: "Triggers",
+  action: "Actions",
+  ai: "AI & Models",
+  database: "Database",
+  communication: "Communication",
+  logic: "Logic",
+  data: "Data & Code",
 };
 
 function NodePalette() {
@@ -15,22 +29,38 @@ function NodePalette() {
     e.dataTransfer.effectAllowed = "move";
   }
 
+  const categories = Array.from(new Set(NODE_TYPES.map((n) => n.category)));
+
   return (
-    <div className="w-56 shrink-0 border-r border-slate-800 bg-slate-900/50 p-3 space-y-2">
-      <p className="text-xs uppercase tracking-wide text-slate-500 px-1 mb-2">
-        Drag onto canvas
-      </p>
-      {NODE_TYPES.map((n) => (
-        <div
-          key={n.type}
-          draggable
-          onDragStart={(e) => handleDragStart(e, n.type)}
-          className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 cursor-grab active:cursor-grabbing hover:border-slate-500 transition"
-        >
-          <span className={`w-2 h-2 rounded-full ${ACCENT_DOT[n.color]}`} />
-          <span className="text-sm text-slate-200">{n.label}</span>
-        </div>
-      ))}
+    <div className="w-60 shrink-0 border-r border-slate-800 bg-slate-900/50 p-3 overflow-y-auto space-y-4">
+      <div className="px-1">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          Node Library
+        </p>
+        <p className="text-[11px] text-slate-500">Drag any node onto the canvas</p>
+      </div>
+
+      {categories.map((cat) => {
+        const nodesInCat = NODE_TYPES.filter((n) => n.category === cat);
+        return (
+          <div key={cat} className="space-y-1.5">
+            <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide px-1">
+              {CATEGORY_LABELS[cat] ?? cat}
+            </p>
+            {nodesInCat.map((n) => (
+              <div
+                key={n.type}
+                draggable
+                onDragStart={(e) => handleDragStart(e, n.type)}
+                className="flex items-center gap-2.5 rounded-md border border-slate-800 bg-slate-900 px-3 py-2 cursor-grab active:cursor-grabbing hover:border-slate-600 hover:bg-slate-800 transition shadow-sm"
+              >
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ACCENT_DOT[n.color] ?? "bg-slate-500"}`} />
+                <span className="text-xs font-medium text-slate-200">{n.label}</span>
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }

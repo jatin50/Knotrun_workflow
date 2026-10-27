@@ -1,38 +1,56 @@
 import { NodeExecutor } from "../types";
+import { interpolate } from "../../utils/interpolate";
 
-const httpRequest: NodeExecutor = async (config) => {
-  const method = (config.method as string) || "GET";
-  const url = config.url as string;
-  // __secretToken is injected by resolveNodeCredentials just before this
-  // runs — it's never something set directly in the node's own config UI.
+const httpRequest: NodeExecutor = async (config, input, context) => {
+  const method = ((config.method as string) || "GET").toUpperCase();
+  const rawUrl = (config.url as string) || "";
   const secretToken = config.__secretToken as string | undefined;
+
+  const url = interpolate(rawUrl, input, context.variables);
 
   if (!url) {
     throw new Error("HTTP Request node has no URL configured");
   }
 
+  const headers: Record<string, string> = {};
+  if (secretToken) {
+    headers["Authorization"] = `Bearer ${secretToken}`;
+  }
+
+  let requestBody: string | undefined = undefined;
+  if (["POST", "PUT", "PATCH"].includes(method) && config.body) {
+    const rawBody = typeof config.body === "string" ? config.body : JSON.stringify(config.body);
+    requestBody = interpolate(rawBody, input, context.variables);
+    headers["Content-Type"] = "application/json";
+  }
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const timeout = setTimeout(() => controller.abort(), 15_000);
 
   try {
     const response = await fetch(url, {
       method,
       signal: controller.signal,
-      headers: secretToken ? { Authorization: `Bearer ${secretToken}` } : undefined,
+      headers: {
+        ...headers,
+        ...(config.headers as Record<string, string> | undefined),
+      },
+      body: requestBody,
     });
+
     const contentType = response.headers.get("content-type") ?? "";
-    const body = contentType.includes("application/json")
+    const responseBody = contentType.includes("application/json")
       ? await response.json()
       : await response.text();
 
     if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}`);
+      throw new Error(`Request failed with status ${response.status}: ${typeof responseBody === "string" ? responseBody : JSON.stringify(responseBody)}`);
     }
 
-    return { status: response.status, body };
+    return { status: response.status, body: responseBody };
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
-      throw new Error("Request timed out after 10 seconds");
+      throw new Error("Request timed out after 15 seconds");
     }
     throw err;
   } finally {

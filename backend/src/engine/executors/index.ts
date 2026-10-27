@@ -5,10 +5,12 @@ import scheduleTrigger from "./scheduleTrigger";
 import httpRequest from "./httpRequest";
 import ifNode from "./ifNode";
 import setVariable from "./setVariable";
+import aiPrompt from "./aiPrompt";
+import postgresQuery from "./postgresQuery";
+import webhookNotification from "./webhookNotification";
+import waitNode from "./waitNode";
+import codeNode from "./codeNode";
 
-// Adding a 5th node type later (Phase 9) means: write its executor file,
-// register it here, and add its config form to the frontend's
-// NodeConfigPanel — nothing else in the engine needs to change.
 export const EXECUTORS: Record<string, NodeExecutor> = {
   "trigger.manual": manualTrigger,
   "trigger.webhook": webhookTrigger,
@@ -16,6 +18,11 @@ export const EXECUTORS: Record<string, NodeExecutor> = {
   "http.request": httpRequest,
   "logic.if": ifNode,
   "data.setVariable": setVariable,
+  "ai.prompt": aiPrompt,
+  "db.postgres": postgresQuery,
+  "communication.webhook": webhookNotification,
+  "logic.wait": waitNode,
+  "data.code": codeNode,
 };
 
 export function getExecutor(nodeType: string): NodeExecutor {

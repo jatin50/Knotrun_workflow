@@ -127,12 +127,14 @@ Goal: nodes can use secrets (API keys, DB creds) without storing them in plainte
 
 ---
 
-## Phase 9 — Expand the Node Library
+## Phase 9 — Expand the Node Library --done
 
 Goal: go from 4 starter nodes to a real, demo-able library.
 
 - Add nodes across categories from `nodes.md`: Loop, Switch, Wait, JSON, one AI node (OpenAI or Anthropic), one Communication node (e.g. Slack or email), one DB node (Postgres)
 - Each new node follows the same `WorkflowNode` contract from Phase 5
+- Expression interpolation (`{{ input.field }}` and `{{ variables.key }}`) supported across action nodes
+- Implemented: AI Prompt (OpenAI + Gemini), PostgreSQL Query, Slack/Discord Webhook, Wait/Delay, Custom JavaScript Code
 
 **Done when:** you can build and run a workflow that mixes triggers, logic, an AI call, and an external side-effect.
 
