@@ -1,5 +1,6 @@
 import { NodeExecutor } from "../types";
 import { interpolate } from "../../utils/interpolate";
+import { validateUrl } from "../../utils/ssrf";
 
 const aiPrompt: NodeExecutor = async (config, input, context) => {
   const provider = (config.provider as string) || "openai";
@@ -31,7 +32,11 @@ const aiPrompt: NodeExecutor = async (config, input, context) => {
 
   try {
     if (provider === "gemini") {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        model
+      )}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      validateUrl(url);
+
       const contents = [
         ...(systemText ? [{ role: "user", parts: [{ text: `System instruction: ${systemText}` }] }] : []),
         { role: "user", parts: [{ text: promptText }] },
@@ -59,8 +64,11 @@ const aiPrompt: NodeExecutor = async (config, input, context) => {
       };
     } else {
       // Default: OpenAI or OpenAI-compatible (Groq, OpenRouter, Ollama, etc.)
-      const endpoint =
-        (config.endpoint as string) || "https://api.openai.com/v1/chat/completions";
+      const rawEndpoint = (config.endpoint as string) || "https://api.openai.com/v1/chat/completions";
+      const endpoint = interpolate(rawEndpoint, input, context.variables);
+
+      // Enforce SSRF validation on custom/configured AI endpoints
+      validateUrl(endpoint);
 
       const messages = [
         ...(systemText ? [{ role: "system", content: systemText }] : []),
