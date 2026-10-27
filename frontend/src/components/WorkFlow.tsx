@@ -21,6 +21,9 @@ const ACCENT_CLASSES: Record<string, { border: string; dot: string }> = {
 export interface WorkflowNodeData {
   nodeType: string;
   configuration: NodeConfig;
+  executionStatus?: "success" | "failed" | "skipped";
+  executionDuration?: number;
+  executionError?: string;
   [key: string]: unknown;
 }
 
@@ -29,19 +32,47 @@ function WorkflowNode({ data, selected }: NodeProps) {
   const def = getNodeTypeDef(nodeData.nodeType);
   const accent = ACCENT_CLASSES[def.color] ?? ACCENT_CLASSES.indigo;
 
+  const status = nodeData.executionStatus;
+  const statusBorder =
+    status === "success"
+      ? "border-emerald-500 ring-1 ring-emerald-500/30"
+      : status === "failed"
+      ? "border-rose-500 ring-1 ring-rose-500/30"
+      : status === "skipped"
+      ? "border-slate-700 opacity-60"
+      : accent.border;
+
   return (
     <div
       className={`min-w-48 rounded-lg bg-slate-900 border-2 ${
-        selected ? "border-white" : accent.border
-      } px-3 py-2 shadow-lg relative`}
+        selected ? "border-white" : statusBorder
+      } px-3 py-2 shadow-lg relative transition-all duration-200`}
     >
       {def.hasInput && (
         <Handle type="target" position={Position.Left} className="bg-slate-500!" />
       )}
 
-      <div className="flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full ${accent.dot}`} />
-        <span className="text-sm font-medium text-slate-100">{def.label}</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full ${accent.dot}`} />
+          <span className="text-sm font-medium text-slate-100">{def.label}</span>
+        </div>
+        {status && (
+          <span
+            className={`inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded font-medium ${
+              status === "success"
+                ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800/80"
+                : status === "failed"
+                ? "bg-rose-950/80 text-rose-400 border border-rose-800/80"
+                : "bg-slate-800 text-slate-400 border border-slate-700"
+            }`}
+            title={status === "failed" ? nodeData.executionError : undefined}
+          >
+            {status === "success" && `✓ ${nodeData.executionDuration ?? 0}ms`}
+            {status === "failed" && "✗ Failed"}
+            {status === "skipped" && "⊘ Skipped"}
+          </span>
+        )}
       </div>
       <p className="text-xs text-slate-400 mt-1 truncate max-w-44">
         {def.summarize(nodeData.configuration ?? {})}

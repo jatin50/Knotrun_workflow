@@ -135,6 +135,24 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
     },
     onSuccess: (result) => {
       setTestResult(result);
+      const statusMap = new Map(result.results.map((r) => [r.nodeId, r]));
+      setNodes((nds) =>
+        nds.map((node) => {
+          const res = statusMap.get(node.id);
+          if (res) {
+            return {
+              ...node,
+              data: {
+                ...(node.data as object),
+                executionStatus: res.status,
+                executionDuration: res.durationMs,
+                executionError: res.error,
+              } as WorkflowNodeData,
+            };
+          }
+          return node;
+        })
+      );
       queryClient.invalidateQueries({ queryKey: ["graph", workflowId] });
     },
   });
@@ -322,7 +340,23 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
       </div>
 
       {testResult && (
-        <TestResultsPanel result={testResult} onClose={() => setTestResult(null)} />
+        <TestResultsPanel
+          result={testResult}
+          onClose={() => {
+            setTestResult(null);
+            setNodes((nds) =>
+              nds.map((node) => ({
+                ...node,
+                data: {
+                  ...(node.data as object),
+                  executionStatus: undefined,
+                  executionDuration: undefined,
+                  executionError: undefined,
+                } as WorkflowNodeData,
+              }))
+            );
+          }}
+        />
       )}
     </div>
   );
