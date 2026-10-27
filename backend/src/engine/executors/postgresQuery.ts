@@ -2,19 +2,68 @@ import { NodeExecutor } from "../types";
 import prisma from "../../lib/prisma";
 import { interpolate } from "../../utils/interpolate";
 
-const postgresQuery: NodeExecutor = async (config, input, context) => {
-  const rawQuery = (config.query as string) || "";
-  const query = interpolate(rawQuery, input, context.variables).trim();
+const FORBIDDEN_TABLES = [
+  "users",
+  "credentials",
+  "api_keys",
+  "audit_logs",
+  "_prisma_migrations",
+];
 
-  if (!query) {
+const FORBIDDEN_COMMANDS = [
+  "DROP",
+  "ALTER",
+  "TRUNCATE",
+  "GRANT",
+  "REVOKE",
+  "COPY",
+  "VACUUM",
+  "REINDEX",
+];
+
+/**
+ * Validates and sanitizes SQL queries to prevent multi-statement execution,
+ * destructive administrative commands, and unauthorized access to core platform tables.
+ */
+function validateSqlQuery(query: string): string {
+  const clean = query.trim();
+
+  if (!clean) {
     throw new Error("PostgreSQL node has no query configured");
   }
 
+  // 1. Block multiple stacked SQL statements (e.g. `SELECT 1; DROP TABLE users;`)
+  if (/;[\s\S]*\S/.test(clean)) {
+    throw new Error("Execution blocked: Multiple stacked SQL statements in a single node are forbidden.");
+  }
+
+  // 2. Block destructive administrative commands
+  for (const cmd of FORBIDDEN_COMMANDS) {
+    const regex = new RegExp(`\\b${cmd}\\b`, "i");
+    if (regex.test(clean)) {
+      throw new Error(`Execution blocked: Destructive command '${cmd}' is forbidden by security policy.`);
+    }
+  }
+
+  // 3. Prevent reading or modifying core internal platform tables
+  for (const table of FORBIDDEN_TABLES) {
+    const regex = new RegExp(`\\b${table}\\b`, "i");
+    if (regex.test(clean)) {
+      throw new Error(`Execution blocked: Access to internal platform table '${table}' is forbidden.`);
+    }
+  }
+
+  // Strip trailing semicolon if present
+  return clean.replace(/;$/, "");
+}
+
+const postgresQuery: NodeExecutor = async (config, input, context) => {
+  const rawQuery = (config.query as string) || "";
+  const interpolated = interpolate(rawQuery, input, context.variables);
+  const query = validateSqlQuery(interpolated);
+
   try {
-    // If query is a SELECT / reading query, run $queryRawUnsafe
-    // If it's INSERT / UPDATE / DELETE, $executeRawUnsafe can also be used,
-    // but $queryRawUnsafe works for SELECT and queries returning rows.
-    const isMutation = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE)\b/i.test(query);
+    const isMutation = /^\s*(INSERT|UPDATE|DELETE)\b/i.test(query);
 
     if (isMutation) {
       const affectedRows = await prisma.$executeRawUnsafe(query);
