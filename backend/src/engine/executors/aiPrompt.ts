@@ -1,6 +1,7 @@
 import { NodeExecutor } from "../types";
 import { interpolate } from "../../utils/interpolate";
 import { validateUrl } from "../../utils/ssrf";
+import prisma from "../../lib/prisma";
 
 const aiPrompt: NodeExecutor = async (config, input, context) => {
   const provider = (config.provider as string) || "openai";
@@ -13,6 +14,32 @@ const aiPrompt: NodeExecutor = async (config, input, context) => {
 
   if (!promptText.trim()) {
     throw new Error("AI Prompt node has no prompt text configured");
+  }
+
+  // Conversational Memory / Chat History
+  const enableMemory = Boolean(config.enableMemory);
+  let sessionId = "default";
+  let pastMessages: Array<{ role: string; content: string }> = [];
+
+  if (enableMemory) {
+    const rawSessionId = (config.sessionId as string) || "default";
+    sessionId = interpolate(rawSessionId, input, context.variables).trim() || "default";
+
+    const memoryLimit =
+      typeof config.memoryLimit === "number" && config.memoryLimit > 0
+        ? Math.min(Math.max(config.memoryLimit, 1), 50)
+        : 10;
+
+    const dbHistory = await prisma.chatMessage.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: "desc" },
+      take: memoryLimit,
+    });
+
+    pastMessages = dbHistory.reverse().map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
   }
 
   // Token resolution: check injected secret from credential first, then config.apiKey, then env
@@ -37,10 +64,23 @@ const aiPrompt: NodeExecutor = async (config, input, context) => {
       )}:generateContent?key=${encodeURIComponent(apiKey)}`;
       validateUrl(url);
 
-      const contents = [
-        ...(systemText ? [{ role: "user", parts: [{ text: `System instruction: ${systemText}` }] }] : []),
-        { role: "user", parts: [{ text: promptText }] },
-      ];
+      const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+
+      // If system prompt is configured, provide it as context in the first user turn
+      if (systemText) {
+        contents.push({ role: "user", parts: [{ text: `System instruction: ${systemText}` }] });
+      }
+
+      // Append conversation history
+      for (const msg of pastMessages) {
+        contents.push({
+          role: msg.role === "assistant" ? "model" : "user",
+          parts: [{ text: msg.content }],
+        });
+      }
+
+      // Append current user prompt
+      contents.push({ role: "user", parts: [{ text: promptText }] });
 
       const res = await fetch(url, {
         method: "POST",
@@ -56,10 +96,22 @@ const aiPrompt: NodeExecutor = async (config, input, context) => {
 
       const json = (await res.json()) as any;
       const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+      // Store user prompt and model response in chat memory database
+      if (enableMemory && text) {
+        await prisma.chatMessage.createMany({
+          data: [
+            { sessionId, role: "user", content: promptText },
+            { sessionId, role: "assistant", content: text },
+          ],
+        });
+      }
+
       return {
         text,
         model,
         provider: "gemini",
+        ...(enableMemory ? { sessionId, memoryTurns: pastMessages.length } : {}),
         usage: json.usageMetadata ?? null,
       };
     } else {
@@ -70,10 +122,22 @@ const aiPrompt: NodeExecutor = async (config, input, context) => {
       // Enforce SSRF validation on custom/configured AI endpoints
       validateUrl(endpoint);
 
-      const messages = [
-        ...(systemText ? [{ role: "system", content: systemText }] : []),
-        { role: "user", content: promptText },
-      ];
+      const messages: Array<{ role: string; content: string }> = [];
+
+      if (systemText) {
+        messages.push({ role: "system", content: systemText });
+      }
+
+      // Append conversation history
+      for (const msg of pastMessages) {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+
+      // Append current user prompt
+      messages.push({ role: "user", content: promptText });
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -96,10 +160,22 @@ const aiPrompt: NodeExecutor = async (config, input, context) => {
 
       const json = (await res.json()) as any;
       const text = json.choices?.[0]?.message?.content ?? "";
+
+      // Store user prompt and assistant response in chat memory database
+      if (enableMemory && text) {
+        await prisma.chatMessage.createMany({
+          data: [
+            { sessionId, role: "user", content: promptText },
+            { sessionId, role: "assistant", content: text },
+          ],
+        });
+      }
+
       return {
         text,
         model,
         provider: "openai",
+        ...(enableMemory ? { sessionId, memoryTurns: pastMessages.length } : {}),
         usage: json.usage ?? null,
       };
     }

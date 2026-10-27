@@ -65,9 +65,12 @@ export const NODE_TYPES: NodeTypeDef[] = [
       prompt: "Summarize this data: {{ input }}",
       systemPrompt: "You are a helpful AI automation assistant.",
       credentialId: "",
+      enableMemory: false,
+      sessionId: "{{ input.sessionId || 'default' }}",
+      memoryLimit: 10,
     },
     summarize: (c) =>
-      `${(c.provider as string) || "AI"}: ${(c.model as string) || "model"}`,
+      `${(c.provider as string) || "AI"}: ${(c.model as string) || "model"}${c.enableMemory ? " [Memory]" : ""}`,
   },
 
   // --- DATABASE ---

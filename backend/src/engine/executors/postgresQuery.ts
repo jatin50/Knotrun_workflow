@@ -14,6 +14,7 @@ const FORBIDDEN_TABLES = [
   "triggers",
   "executions",
   "execution_data",
+  "chat_messages",
   "api_keys",
   "audit_logs",
   "_prisma_migrations",

@@ -1,0 +1,10 @@
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String   // "user" | "assistant" | "system"
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([sessionId, createdAt])
+  @@map("chat_messages")
+}

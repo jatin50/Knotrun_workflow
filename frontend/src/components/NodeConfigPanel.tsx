@@ -228,6 +228,57 @@ function NodeConfigPanel({
               Output will be available downstream as <code className="text-indigo-300">input.text</code>.
             </p>
           </div>
+
+          {/* CONVERSATION MEMORY */}
+          <div className="pt-2 border-t border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-300 flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(configuration.enableMemory)}
+                  onChange={(e) => set("enableMemory", e.target.checked)}
+                  className="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0 focus:ring-offset-0"
+                />
+                Remember Chat History
+              </label>
+              {Boolean(configuration.enableMemory) && (
+                <span className="text-[10px] text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/80 px-1.5 py-0.5 rounded">
+                  Memory Active
+                </span>
+              )}
+            </div>
+
+            {Boolean(configuration.enableMemory) && (
+              <div className="space-y-2 pl-2 border-l-2 border-indigo-500/50 pt-1">
+                <div className="space-y-1">
+                  <label className="text-[11px] text-slate-400">Session ID (Expression or String)</label>
+                  <input
+                    value={(configuration.sessionId as string) ?? ""}
+                    onChange={(e) => set("sessionId", e.target.value)}
+                    placeholder="{{ input.sessionId || 'default' }}"
+                    className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-xs font-mono outline-none focus:border-slate-500"
+                  />
+                  <p className="text-[10px] text-slate-500">
+                    Runs sharing this Session ID remember their conversation turns.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] text-slate-400">Context Window (Max Messages)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={(configuration.memoryLimit as number) ?? 10}
+                    onChange={(e) => set("memoryLimit", Number(e.target.value))}
+                    className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-xs outline-none focus:border-slate-500"
+                  />
+                  <p className="text-[10px] text-slate-500">
+                    Number of recent conversation turns to feed to the model (1–50).
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </>
       )}
 
