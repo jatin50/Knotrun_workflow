@@ -7,6 +7,7 @@
     "setup": "node scripts/setup.mjs",
     "dev": "node scripts/dev.mjs",
     "bench": "node scripts/benchmark.mjs",
+    "bench:nodes": "node scripts/benchmark_nodes.mjs",
     "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
     "dev:backend": "npm --prefix backend run dev",
