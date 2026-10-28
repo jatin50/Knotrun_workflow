@@ -249,8 +249,8 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-950">
-      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2">
+    <div className="h-screen w-full flex flex-col bg-slate-950 overflow-hidden">
+      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2 shrink-0">
         <div className="flex items-center gap-4">
           <Link to=".." relative="path" className="text-sm text-slate-500 hover:text-slate-300">
             &larr; Back to workspace
@@ -333,10 +333,14 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
         </div>
       </div>
 
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 w-full overflow-hidden relative">
         <NodePalette />
 
-        <div className="flex-1" onDragOver={onDragOver} onDrop={onDrop}>
+        <div
+          className="flex-1 h-full w-full relative min-w-0 min-h-0"
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -348,6 +352,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
             onPaneClick={() => setSelectedNodeId(null)}
             fitView
             colorMode="dark"
+            style={{ width: "100%", height: "100%" }}
           >
             <Background />
             <Controls />
@@ -369,23 +374,25 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
       </div>
 
       {testResult && (
-        <TestResultsPanel
-          result={testResult}
-          onClose={() => {
-            setTestResult(null);
-            setNodes((nds) =>
-              nds.map((node) => ({
-                ...node,
-                data: {
-                  ...(node.data as object),
-                  executionStatus: undefined,
-                  executionDuration: undefined,
-                  executionError: undefined,
-                } as WorkflowNodeData,
-              }))
-            );
-          }}
-        />
+        <div className="shrink-0 w-full">
+          <TestResultsPanel
+            result={testResult}
+            onClose={() => {
+              setTestResult(null);
+              setNodes((nds) =>
+                nds.map((node) => ({
+                  ...node,
+                  data: {
+                    ...(node.data as object),
+                    executionStatus: undefined,
+                    executionDuration: undefined,
+                    executionError: undefined,
+                  } as WorkflowNodeData,
+                }))
+              );
+            }}
+          />
+        </div>
       )}
 
       <TemplateGalleryModal
@@ -402,9 +409,11 @@ function WorkflowEditorPage() {
   if (!workflowId) return null;
 
   return (
-    <ReactFlowProvider>
-      <EditorCanvas workflowId={workflowId} />
-    </ReactFlowProvider>
+    <div className="h-screen w-screen overflow-hidden">
+      <ReactFlowProvider>
+        <EditorCanvas workflowId={workflowId} />
+      </ReactFlowProvider>
+    </div>
   );
 }
 
