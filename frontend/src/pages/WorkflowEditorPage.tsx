@@ -199,7 +199,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
       setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ["graph", workflowId] });
       queryClient.invalidateQueries({ queryKey: ["triggers", workflowId] });
-      setRunMessage("All changes saved ✓");
+      setRunMessage("Saved successfully!");
       setTimeout(() => setRunMessage(null), 2500);
     },
     onError: (err) => {
@@ -208,15 +208,6 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
       setTimeout(() => setRunMessage(null), 5000);
     },
   });
-
-  // Debounced auto-save: persist changes 2 seconds after user stops editing
-  useEffect(() => {
-    if (!hasUnsavedChanges || nodes.length === 0) return;
-    const timer = setTimeout(() => {
-      saveMutation.mutate();
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [hasUnsavedChanges, nodes, edges]);
 
   const testMutation = useMutation({
     mutationFn: async () => {
@@ -347,11 +338,24 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
     );
   }
 
+  function handleNavigateLink(e: React.MouseEvent) {
+    if (hasUnsavedChanges) {
+      if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) {
+        e.preventDefault();
+      }
+    }
+  }
+
   return (
     <div className="h-screen w-full flex flex-col bg-slate-950 overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2 shrink-0">
         <div className="flex items-center gap-4">
-          <Link to=".." relative="path" className="text-sm text-slate-500 hover:text-slate-300">
+          <Link
+            to=".."
+            relative="path"
+            onClick={handleNavigateLink}
+            className="text-sm text-slate-500 hover:text-slate-300"
+          >
             &larr; Back to workspace
           </Link>
           <div className="h-4 w-px bg-slate-800" />
@@ -379,20 +383,6 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
                 {workflow.active ? "Active" : "Inactive"}
               </button>
             )}
-            <button
-              type="button"
-              onClick={handleUndo}
-              disabled={undoStack.length === 0}
-              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-300 hover:text-white disabled:opacity-40 rounded-md bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
-              title="Undo last change (Ctrl+Z)"
-            >
-              <span>↶ Undo</span>
-              {undoStack.length > 0 && (
-                <span className="text-[10px] font-mono px-1 rounded bg-slate-800 text-indigo-400">
-                  {undoStack.length}
-                </span>
-              )}
-            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -401,6 +391,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
           )}
           <Link
             to={`/workflows/${workflowId}/executions`}
+            onClick={handleNavigateLink}
             className="text-sm text-slate-400 hover:text-slate-200 transition px-2 py-1 rounded hover:bg-slate-800"
           >
             Executions &rarr;
@@ -408,7 +399,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
           <button
             type="button"
             onClick={() => setIsTemplateModalOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white px-2.5 py-1.5 rounded-md transition shadow-sm"
+            className="flex items-center gap-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-md transition"
             title="Browse and load pre-built enterprise workflow templates"
           >
             <span>⚡</span>
@@ -417,15 +408,9 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
           <button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
-              hasUnsavedChanges
-                ? "bg-amber-600 hover:bg-amber-500 text-white shadow-sm ring-1 ring-amber-400/50"
-                : "bg-slate-800 hover:bg-slate-700 text-slate-200"
-            }`}
-            title={hasUnsavedChanges ? "You have unsaved changes (Auto-saving...)" : "All changes saved"}
+            className="bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 text-slate-200 rounded-md px-3 py-1.5 text-sm font-medium transition"
           >
-            {hasUnsavedChanges && <span className="w-1.5 h-1.5 rounded-full bg-amber-200 animate-pulse" />}
-            <span>{saveMutation.isPending ? "Saving..." : hasUnsavedChanges ? "Save Changes" : "Saved ✓"}</span>
+            {saveMutation.isPending ? "Saving..." : "Save"}
           </button>
           <button
             onClick={() => testMutation.mutate()}

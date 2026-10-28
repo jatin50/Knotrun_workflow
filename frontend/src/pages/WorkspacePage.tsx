@@ -220,10 +220,10 @@ function WorkspacePage() {
               <button
                 type="button"
                 onClick={() => setIsTemplateModalOpen(true)}
-                className="flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 px-4 py-2 text-sm font-semibold text-white transition shadow-sm whitespace-nowrap"
+                className="flex items-center justify-center gap-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:text-white transition whitespace-nowrap shadow-sm"
               >
                 <span>⚡</span>
-                <span>Browse SaaS Templates</span>
+                <span>Browse Templates</span>
               </button>
             </div>
             {createWorkflowMutation.isError && (
