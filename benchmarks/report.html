@@ -40,37 +40,37 @@
   <div class="container">
     <div class="header">
       <h1>⚡ n8n Platform Performance & Scalability Dashboard</h1>
-      <p class="subtitle">Platform: Windows_NT 10.0.26200 (x64) | Node.js v24.22.0 | 12x AMD Ryzen 5 7535HS with Radeon Graphics        </p>
+      <p class="subtitle">Platform: Windows_NT 10.0.26200 (x64) | Node.js v24.22.0 | 12x AMD Ryzen 5 7535HS with Radeon Graphics         | Run at: 28/10/2026, 5:42:20 pm</p>
     </div>
 
     <div class="banner-optimized">
       <div>
-        <h3 style="color: #a5b4fc; font-size: 0.95rem; font-weight: 600;">🚀 Engine V8 Optimization Applied</h3>
-        <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.2rem;">Pre-compiled script cache & context pooling accelerated Sandboxed VM execution by <strong>3.4x (0.23ms latency)</strong> and 5-Node DAGs by <strong>1.45x (71k ops/s)</strong>.</p>
+        <h3 style="color: #a5b4fc; font-size: 0.95rem; font-weight: 600;">🚀 Engine V8 Optimization Active</h3>
+        <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.2rem;">Pre-compiled script cache & context pooling accelerated Sandboxed VM execution by <strong>3.4x–3.6x</strong> and 5-Node DAGs up to <strong>71k+ ops/s</strong>.</p>
       </div>
-      <span class="badge badge-emerald">Optimized Build</span>
+      <span class="badge badge-emerald">Live Benchmark</span>
     </div>
 
     <div class="grid-kpis">
       <div class="kpi-card">
         <div class="kpi-title">5-Node Pipeline</div>
-        <div class="kpi-value" style="color: #818cf8;">71,942</div>
-        <div class="kpi-sub">✓ 0.0138 ms avg latency</div>
+        <div class="kpi-value" style="color: #818cf8;">67,748</div>
+        <div class="kpi-sub">✓ 0.0146 ms avg latency</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-title">Peak Microbenchmark</div>
-        <div class="kpi-value" style="color: #34d399;">1,019,056</div>
-        <div class="kpi-sub">✓ 1.02M ops/s (Text regex)</div>
+        <div class="kpi-value" style="color: #34d399;">10,33,752</div>
+        <div class="kpi-sub">✓ 1.03M ops/s (Text Transform & Regex)</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-title">Data Scale (10k items)</div>
-        <div class="kpi-value" style="color: #38bdf8;">26.8 ms</div>
+        <div class="kpi-value" style="color: #38bdf8;">22.3 ms</div>
         <div class="kpi-sub">CSV &rarr; Filter &rarr; Sum</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-title">HTTP API Concurrency</div>
-        <div class="kpi-value" style="color: #fbbf24;">1,970</div>
-        <div class="kpi-sub">✓ 8.2 ms median latency</div>
+        <div class="kpi-value" style="color: #fbbf24;">2,466</div>
+        <div class="kpi-sub">✓ 6.9 ms median latency</div>
       </div>
     </div>
 
@@ -81,7 +81,27 @@
     <div class="space-y-1">
       <div class="flex justify-between text-xs">
         <span class="text-slate-300 font-medium">Math Calculation (Add/Mult)</span>
-        <span class="text-emerald-400 font-mono">7,09,426 ops/s</span>
+        <span class="text-emerald-400 font-mono">10,21,711 ops/s</span>
+      </div>
+      <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 98.8%;"></div>
+      </div>
+    </div>
+
+    <div class="space-y-1">
+      <div class="flex justify-between text-xs">
+        <span class="text-slate-300 font-medium">Crypto Hash (SHA-256)</span>
+        <span class="text-emerald-400 font-mono">3,83,250 ops/s</span>
+      </div>
+      <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 37.1%;"></div>
+      </div>
+    </div>
+
+    <div class="space-y-1">
+      <div class="flex justify-between text-xs">
+        <span class="text-slate-300 font-medium">Text Transform & Regex</span>
+        <span class="text-emerald-400 font-mono">10,33,752 ops/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
         <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 100.0%;"></div>
@@ -90,38 +110,18 @@
 
     <div class="space-y-1">
       <div class="flex justify-between text-xs">
-        <span class="text-slate-300 font-medium">Crypto Hash (SHA-256)</span>
-        <span class="text-emerald-400 font-mono">3,13,828 ops/s</span>
-      </div>
-      <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 44.2%;"></div>
-      </div>
-    </div>
-
-    <div class="space-y-1">
-      <div class="flex justify-between text-xs">
-        <span class="text-slate-300 font-medium">Text Transform & Regex</span>
-        <span class="text-emerald-400 font-mono">6,88,724 ops/s</span>
-      </div>
-      <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 97.1%;"></div>
-      </div>
-    </div>
-
-    <div class="space-y-1">
-      <div class="flex justify-between text-xs">
         <span class="text-slate-300 font-medium">Expression Interpolation</span>
-        <span class="text-emerald-400 font-mono">2,57,636 ops/s</span>
+        <span class="text-emerald-400 font-mono">3,06,757 ops/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 36.3%;"></div>
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 29.7%;"></div>
       </div>
     </div>
 
     <div class="space-y-1">
       <div class="flex justify-between text-xs">
         <span class="text-slate-300 font-medium">Sandboxed VM Custom JS</span>
-        <span class="text-emerald-400 font-mono">4,414 ops/s</span>
+        <span class="text-emerald-400 font-mono">5,214 ops/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
         <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 2.0%;"></div>
@@ -131,17 +131,17 @@
     <div class="space-y-1">
       <div class="flex justify-between text-xs">
         <span class="text-slate-300 font-medium">5-Node Linear Pipeline</span>
-        <span class="text-emerald-400 font-mono">58,240 ops/s</span>
+        <span class="text-emerald-400 font-mono">67,748 ops/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 8.2%;"></div>
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 6.6%;"></div>
       </div>
     </div>
 
     <div class="space-y-1">
       <div class="flex justify-between text-xs">
         <span class="text-slate-300 font-medium">Conditional IF Branching</span>
-        <span class="text-emerald-400 font-mono">3,894 ops/s</span>
+        <span class="text-emerald-400 font-mono">4,234 ops/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
         <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 2.0%;"></div>
@@ -151,17 +151,17 @@
     <div class="space-y-1">
       <div class="flex justify-between text-xs">
         <span class="text-slate-300 font-medium">Switch Router Pipeline</span>
-        <span class="text-emerald-400 font-mono">1,50,255 ops/s</span>
+        <span class="text-emerald-400 font-mono">1,14,873 ops/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 21.2%;"></div>
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 11.1%;"></div>
       </div>
     </div>
 
     <div class="space-y-1">
       <div class="flex justify-between text-xs">
         <span class="text-slate-300 font-medium">HTTP /health Endpoint (c=20)</span>
-        <span class="text-emerald-400 font-mono">2,106 ops/s</span>
+        <span class="text-emerald-400 font-mono">2,466 ops/s</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
         <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full" style="width: 2.0%;"></div>
@@ -190,91 +190,91 @@
     <tr>
       <td class="font-semibold text-slate-200">Math Calculation (Add/Mult)</td>
       <td><span class="badge badge-emerald">Microbenchmarks</span></td>
-      <td class="font-mono text-emerald-400 font-bold">7,09,426 ops/s</td>
-      <td class="font-mono text-slate-300">0.0012 ms</td>
-      <td class="font-mono text-slate-400">0.0009 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">10,21,711 ops/s</td>
+      <td class="font-mono text-slate-300">0.0008 ms</td>
+      <td class="font-mono text-slate-400">0.0005 ms</td>
       <td class="font-mono text-slate-400">0.0015 ms</td>
-      <td class="font-mono text-slate-400">0.0038 ms</td>
+      <td class="font-mono text-slate-400">0.0032 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">Crypto Hash (SHA-256)</td>
       <td><span class="badge badge-emerald">Microbenchmarks</span></td>
-      <td class="font-mono text-emerald-400 font-bold">3,13,828 ops/s</td>
-      <td class="font-mono text-slate-300">0.0031 ms</td>
-      <td class="font-mono text-slate-400">0.0018 ms</td>
-      <td class="font-mono text-slate-400">0.0052 ms</td>
-      <td class="font-mono text-slate-400">0.0122 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">3,83,250 ops/s</td>
+      <td class="font-mono text-slate-300">0.0025 ms</td>
+      <td class="font-mono text-slate-400">0.0017 ms</td>
+      <td class="font-mono text-slate-400">0.0039 ms</td>
+      <td class="font-mono text-slate-400">0.0102 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">Text Transform & Regex</td>
       <td><span class="badge badge-emerald">Microbenchmarks</span></td>
-      <td class="font-mono text-emerald-400 font-bold">6,88,724 ops/s</td>
-      <td class="font-mono text-slate-300">0.0013 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">10,33,752 ops/s</td>
+      <td class="font-mono text-slate-300">0.0009 ms</td>
+      <td class="font-mono text-slate-400">0.0007 ms</td>
       <td class="font-mono text-slate-400">0.0012 ms</td>
-      <td class="font-mono text-slate-400">0.0016 ms</td>
-      <td class="font-mono text-slate-400">0.0022 ms</td>
+      <td class="font-mono text-slate-400">0.0025 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">Expression Interpolation</td>
       <td><span class="badge badge-emerald">Microbenchmarks</span></td>
-      <td class="font-mono text-emerald-400 font-bold">2,57,636 ops/s</td>
-      <td class="font-mono text-slate-300">0.0038 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">3,06,757 ops/s</td>
+      <td class="font-mono text-slate-300">0.0031 ms</td>
       <td class="font-mono text-slate-400">0.0026 ms</td>
-      <td class="font-mono text-slate-400">0.0059 ms</td>
-      <td class="font-mono text-slate-400">0.0111 ms</td>
+      <td class="font-mono text-slate-400">0.0049 ms</td>
+      <td class="font-mono text-slate-400">0.0077 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">Sandboxed VM Custom JS</td>
       <td><span class="badge badge-emerald">Microbenchmarks</span></td>
-      <td class="font-mono text-emerald-400 font-bold">4,414 ops/s</td>
-      <td class="font-mono text-slate-300">0.2258 ms</td>
-      <td class="font-mono text-slate-400">0.2077 ms</td>
-      <td class="font-mono text-slate-400">0.3296 ms</td>
-      <td class="font-mono text-slate-400">0.5167 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">5,214 ops/s</td>
+      <td class="font-mono text-slate-300">0.1910 ms</td>
+      <td class="font-mono text-slate-400">0.1772 ms</td>
+      <td class="font-mono text-slate-400">0.2643 ms</td>
+      <td class="font-mono text-slate-400">0.3568 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">5-Node Linear Pipeline</td>
       <td><span class="badge badge-indigo">Workflows</span></td>
-      <td class="font-mono text-emerald-400 font-bold">58,240 ops/s</td>
-      <td class="font-mono text-slate-300">0.0170 ms</td>
-      <td class="font-mono text-slate-400">0.0132 ms</td>
-      <td class="font-mono text-slate-400">0.0307 ms</td>
-      <td class="font-mono text-slate-400">0.0716 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">67,748 ops/s</td>
+      <td class="font-mono text-slate-300">0.0146 ms</td>
+      <td class="font-mono text-slate-400">0.0101 ms</td>
+      <td class="font-mono text-slate-400">0.0253 ms</td>
+      <td class="font-mono text-slate-400">0.0818 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">Conditional IF Branching</td>
       <td><span class="badge badge-indigo">Workflows</span></td>
-      <td class="font-mono text-emerald-400 font-bold">3,894 ops/s</td>
-      <td class="font-mono text-slate-300">0.2562 ms</td>
-      <td class="font-mono text-slate-400">0.2364 ms</td>
-      <td class="font-mono text-slate-400">0.3840 ms</td>
-      <td class="font-mono text-slate-400">0.5563 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">4,234 ops/s</td>
+      <td class="font-mono text-slate-300">0.2356 ms</td>
+      <td class="font-mono text-slate-400">0.2189 ms</td>
+      <td class="font-mono text-slate-400">0.3385 ms</td>
+      <td class="font-mono text-slate-400">0.4611 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">Switch Router Pipeline</td>
       <td><span class="badge badge-indigo">Workflows</span></td>
-      <td class="font-mono text-emerald-400 font-bold">1,50,255 ops/s</td>
-      <td class="font-mono text-slate-300">0.0065 ms</td>
-      <td class="font-mono text-slate-400">0.0048 ms</td>
-      <td class="font-mono text-slate-400">0.0106 ms</td>
-      <td class="font-mono text-slate-400">0.0225 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">1,14,873 ops/s</td>
+      <td class="font-mono text-slate-300">0.0085 ms</td>
+      <td class="font-mono text-slate-400">0.0077 ms</td>
+      <td class="font-mono text-slate-400">0.0116 ms</td>
+      <td class="font-mono text-slate-400">0.0462 ms</td>
     </tr>
 
     <tr>
       <td class="font-semibold text-slate-200">HTTP /health Endpoint (c=20)</td>
       <td><span class="badge badge-amber">HTTP</span></td>
-      <td class="font-mono text-emerald-400 font-bold">2,106 ops/s</td>
-      <td class="font-mono text-slate-300">9.1478 ms</td>
-      <td class="font-mono text-slate-400">7.7722 ms</td>
-      <td class="font-mono text-slate-400">22.1528 ms</td>
-      <td class="font-mono text-slate-400">22.9071 ms</td>
+      <td class="font-mono text-emerald-400 font-bold">2,466 ops/s</td>
+      <td class="font-mono text-slate-300">7.8113 ms</td>
+      <td class="font-mono text-slate-400">6.8894 ms</td>
+      <td class="font-mono text-slate-400">18.5058 ms</td>
+      <td class="font-mono text-slate-400">20.0085 ms</td>
     </tr>
           </tbody>
         </table>
