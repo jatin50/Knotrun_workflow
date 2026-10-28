@@ -65,27 +65,41 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(null);
 
-  // Undo history stack & unsaved changes tracking
-  const [undoStack, setUndoStack] = useState<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+  // Deleted nodes trash stack for Ctrl+Z recovery (only recovers deleted nodes without reverting added nodes)
+  const [deletedTrash, setDeletedTrash] = useState<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  const pushUndoSnapshot = useCallback(() => {
-    setUndoStack((prev) => [...prev.slice(-25), { nodes: JSON.parse(JSON.stringify(nodes)), edges: [...edges] }]);
-  }, [nodes, edges]);
+  const handleRestoreDeletedNode = useCallback(() => {
+    if (deletedTrash.length === 0) {
+      setRunMessage("No deleted nodes to restore.");
+      setTimeout(() => setRunMessage(null), 2000);
+      return;
+    }
 
-  const handleUndo = useCallback(() => {
-    if (undoStack.length === 0) return;
-    const last = undoStack[undoStack.length - 1];
-    setUndoStack((prev) => prev.slice(0, prev.length - 1));
-    setNodes(last.nodes);
-    setEdges(last.edges);
-    setSelectedNodeId(null);
+    const last = deletedTrash[deletedTrash.length - 1];
+    setDeletedTrash((prev) => prev.slice(0, prev.length - 1));
+
+    // Restore deleted nodes without touching or deleting any newly added nodes
+    setNodes((currentNodes) => {
+      const existingIds = new Set(currentNodes.map((n) => n.id));
+      const nodesToRestore = last.nodes.filter((n) => !existingIds.has(n.id));
+      return [...currentNodes, ...nodesToRestore];
+    });
+
+    // Restore connected edges
+    setEdges((currentEdges) => {
+      const existingEdgeIds = new Set(currentEdges.map((e) => e.id));
+      const edgesToRestore = last.edges.filter((e) => !existingEdgeIds.has(e.id));
+      return [...currentEdges, ...edgesToRestore];
+    });
+
     setHasUnsavedChanges(true);
-    setRunMessage("Undo: Restored previous canvas state (Ctrl+Z)");
+    const count = last.nodes.length;
+    setRunMessage(`Restored ${count} deleted node${count > 1 ? "s" : ""} (Ctrl+Z)`);
     setTimeout(() => setRunMessage(null), 2500);
-  }, [undoStack, setNodes, setEdges]);
+  }, [deletedTrash, setNodes, setEdges]);
 
-  // Global Ctrl+Z keyboard shortcut
+  // Global Ctrl+Z keyboard shortcut: restores accidentally deleted nodes
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
@@ -93,12 +107,12 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
-        handleUndo();
+        handleRestoreDeletedNode();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleUndo]);
+  }, [handleRestoreDeletedNode]);
 
   // Warn if leaving with unsaved changes
   useEffect(() => {
@@ -115,7 +129,6 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   async function handleLoadTemplateInEditor(template: WorkflowTemplate) {
     setLoadingTemplateId(template.id);
     try {
-      pushUndoSnapshot();
       const { nodes: freshNodes, connections: freshConnections } = instantiateTemplate(template);
       const flowNodes = freshNodes.map(apiNodeToFlowNode);
       const flowEdges = freshConnections.map((c, i) => apiConnectionToEdge(c, i));
@@ -254,11 +267,10 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      pushUndoSnapshot();
       setHasUnsavedChanges(true);
       setEdges((eds) => addEdge(connection, eds));
     },
-    [setEdges, pushUndoSnapshot]
+    [setEdges]
   );
 
   const onDragOver = useCallback((e: DragEvent) => {
@@ -282,11 +294,10 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
         data: { nodeType, configuration: { ...def.defaultConfig } } as WorkflowNodeData,
       };
 
-      pushUndoSnapshot();
       setHasUnsavedChanges(true);
       setNodes((nds) => [...nds, newNode]);
     },
-    [screenToFlowPosition, setNodes, pushUndoSnapshot]
+    [screenToFlowPosition, setNodes]
   );
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
@@ -304,12 +315,19 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   }
 
   function deleteSelectedNode() {
-    pushUndoSnapshot();
+    const targetNode = nodes.find((n) => n.id === selectedNodeId);
+    if (!targetNode) return;
+
+    const connectedEdges = edges.filter(
+      (e) => e.source === selectedNodeId || e.target === selectedNodeId
+    );
+
+    setDeletedTrash((prev) => [...prev.slice(-25), { nodes: [targetNode], edges: connectedEdges }]);
     setHasUnsavedChanges(true);
     setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
     setEdges((eds) => eds.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId));
     setSelectedNodeId(null);
-    setRunMessage("Node deleted. Press Ctrl+Z to undo.");
+    setRunMessage("Node deleted. Press Ctrl+Z to restore.");
     setTimeout(() => setRunMessage(null), 3000);
   }
 
@@ -445,10 +463,18 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onNodesDelete={() => {
-              pushUndoSnapshot();
+            onNodesDelete={(deletedNodes) => {
+              if (!deletedNodes || deletedNodes.length === 0) return;
+              const deletedIds = new Set(deletedNodes.map((n) => n.id));
+              const connectedEdges = edges.filter(
+                (e) => deletedIds.has(e.source) || deletedIds.has(e.target)
+              );
+              setDeletedTrash((prev) => [
+                ...prev.slice(-25),
+                { nodes: deletedNodes, edges: connectedEdges },
+              ]);
               setHasUnsavedChanges(true);
-              setRunMessage("Node deleted. Press Ctrl+Z to undo.");
+              setRunMessage("Node deleted. Press Ctrl+Z to restore.");
               setTimeout(() => setRunMessage(null), 3000);
             }}
             nodeTypes={nodeTypes}
