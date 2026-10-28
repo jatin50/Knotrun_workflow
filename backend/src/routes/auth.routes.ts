@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, logout, me, refresh } from "../controllers/auth.controller";
+import { register, login, logout, me, refresh, guestLogin } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { createRateLimiter } from "../middleware/rateLimiter";
 
@@ -19,8 +19,16 @@ const loginLimiter = createRateLimiter({
   message: "Too many login attempts, please try again in a minute.",
 });
 
+// Protect guest demo login against excessive spam (20 requests / minute / IP)
+const guestLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+  message: "Too many demo logins from this IP, please wait a minute.",
+});
+
 router.post("/register", registerLimiter, register);
 router.post("/login", loginLimiter, login);
+router.post("/guest", guestLimiter, guestLogin);
 router.post("/logout", logout);
 router.post("/refresh", refresh);
 router.get("/me", authenticate, me);

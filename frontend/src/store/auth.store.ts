@@ -13,6 +13,7 @@ interface AuthState {
   error: string | null;
   register: (name: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginAsGuest: () => Promise<{ user: User; workspaceId?: string }>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
 }
@@ -38,6 +39,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const { data } = await api.post("/api/auth/login", { email, password });
       set({ user: data.user, status: "authenticated" });
+    } catch (err) {
+      set({ status: "unauthenticated", error: extractErrorMessage(err) });
+      throw err;
+    }
+  },
+
+  loginAsGuest: async () => {
+    set({ status: "loading", error: null });
+    try {
+      const { data } = await api.post("/api/auth/guest");
+      set({ user: data.user, status: "authenticated" });
+      return data;
     } catch (err) {
       set({ status: "unauthenticated", error: extractErrorMessage(err) });
       throw err;

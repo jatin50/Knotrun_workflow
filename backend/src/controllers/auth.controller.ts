@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt";
 import { setAuthCookies, clearAuthCookies } from "../lib/cookies";
+import { generateUniqueWorkspaceSlug } from "../utils/slug";
 
 // Standard RFC-compliant email pattern check
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -125,5 +126,140 @@ export async function refresh(req: Request, res: Response) {
     } catch {
         clearAuthCookies(res);
         return res.status(401).json({ error: "Invalid or expired refresh token" });
+    }
+}
+
+export async function guestLogin(_req: Request, res: Response) {
+    try {
+        const GUEST_EMAIL = "recruiter.guest@aethelflow.internal";
+        let user = await prisma.user.findUnique({ where: { email: GUEST_EMAIL } });
+
+        if (!user) {
+            const passwordHash = await bcrypt.hash("AethelFlow-Guest-Recruiter-2026!", 10);
+            user = await prisma.user.create({
+                data: {
+                    name: "Guest Recruiter",
+                    email: GUEST_EMAIL,
+                    password: passwordHash,
+                },
+            });
+        }
+
+        // Ensure guest has a demo workspace
+        let workspace = await prisma.workspace.findFirst({
+            where: { ownerId: user.id },
+            include: { workflows: true },
+        });
+
+        if (!workspace) {
+            const slug = await generateUniqueWorkspaceSlug("Recruiter Demo Workspace");
+            workspace = await prisma.workspace.create({
+                data: {
+                    name: "Recruiter Demo Workspace",
+                    slug,
+                    ownerId: user.id,
+                },
+                include: { workflows: true },
+            });
+        }
+
+        // If workspace has no workflows yet, seed starter workflow templates so the recruiter sees immediate results!
+        if (workspace.workflows.length === 0) {
+            // 1. Website Uptime & Cloud Instance Keep-Alive
+            const wf1 = await prisma.workflow.create({
+                data: {
+                    workspaceId: workspace.id,
+                    name: "Website Uptime & Cloud Instance Keep-Alive",
+                    description: "Periodically pings free-tier cloud deployments to prevent cold sleep with SSRF protection.",
+                    active: true,
+                },
+            });
+            await prisma.node.createMany({
+                data: [
+                    {
+                        id: `node_${Date.now()}_1`,
+                        workflowId: wf1.id,
+                        type: "trigger.schedule",
+                        positionX: 80,
+                        positionY: 200,
+                        configuration: { cron: "*/10 * * * *" },
+                    },
+                    {
+                        id: `node_${Date.now()}_2`,
+                        workflowId: wf1.id,
+                        type: "network.ping",
+                        positionX: 380,
+                        positionY: 200,
+                        configuration: { url: "https://httpbin.org/status/200", method: "GET" },
+                    },
+                    {
+                        id: `node_${Date.now()}_3`,
+                        workflowId: wf1.id,
+                        type: "logic.if",
+                        positionX: 680,
+                        positionY: 200,
+                        configuration: { condition: "input.alive === false || input.latencyMs > 2500" },
+                    },
+                    {
+                        id: `node_${Date.now()}_4`,
+                        workflowId: wf1.id,
+                        type: "communication.email",
+                        positionX: 980,
+                        positionY: 200,
+                        configuration: { to: "recruiter@example.com", subject: "🚨 Latency Alert" },
+                    },
+                ],
+            });
+
+            // 2. AI Customer Support Auto-Responder
+            const wf2 = await prisma.workflow.create({
+                data: {
+                    workspaceId: workspace.id,
+                    name: "AI Customer Support Auto-Responder",
+                    description: "Captures customer support webhooks, classifies ticket priority with Gemini AI, and routes escalations.",
+                    active: false,
+                },
+            });
+            await prisma.node.createMany({
+                data: [
+                    {
+                        id: `node_${Date.now()}_5`,
+                        workflowId: wf2.id,
+                        type: "trigger.webhook",
+                        positionX: 80,
+                        positionY: 200,
+                        configuration: { path: "/webhook/support-ticket" },
+                    },
+                    {
+                        id: `node_${Date.now()}_6`,
+                        workflowId: wf2.id,
+                        type: "ai.prompt",
+                        positionX: 380,
+                        positionY: 200,
+                        configuration: { prompt: "Classify incoming support request urgency into P1, P2, P3." },
+                    },
+                    {
+                        id: `node_${Date.now()}_7`,
+                        workflowId: wf2.id,
+                        type: "communication.discord",
+                        positionX: 720,
+                        positionY: 200,
+                        configuration: { channel: "#urgent-support" },
+                    },
+                ],
+            });
+        }
+
+        const accessToken = signAccessToken({ userId: user.id, email: user.email });
+        const refreshToken = signRefreshToken({ userId: user.id, email: user.email });
+        setAuthCookies(res, accessToken, refreshToken);
+
+        return res.json({
+            user: { id: user.id, name: user.name, email: user.email },
+            workspaceId: workspace.id,
+        });
+    } catch (err) {
+        console.error("[Auth] Guest login error:", err);
+        return res.status(500).json({ error: "Failed to authenticate as guest" });
     }
 }

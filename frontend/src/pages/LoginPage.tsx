@@ -5,11 +5,13 @@ import { useAuthStore } from "../store/auth.store";
 function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const loginAsGuest = useAuthStore((s) => s.loginAsGuest);
   const error = useAuthStore((s) => s.error);
   const status = useAuthStore((s) => s.status);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -21,57 +23,139 @@ function LoginPage() {
     }
   }
 
+  async function handleGuestLogin() {
+    setIsGuestLoading(true);
+    try {
+      const data = await loginAsGuest();
+      if (data?.workspaceId) {
+        navigate(`/workspaces/${data.workspaceId}`);
+      } else {
+        navigate("/dashboard");
+      }
+    } catch {
+      // error is already surfaced via the store's `error` field
+    } finally {
+      setIsGuestLoading(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 bg-slate-900 border border-slate-800 rounded-xl p-6"
-      >
-        <h1 className="text-xl font-semibold">Log in</h1>
-
-        {error && (
-          <p className="text-sm text-red-400 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">
-            {error}
+    <div className="min-h-screen bg-[#070A0F] text-slate-100 flex items-center justify-center px-4 selection:bg-amber-500/30">
+      <div className="w-full max-w-md space-y-6">
+        {/* Brand Header */}
+        <div className="text-center space-y-1.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-mono font-bold text-amber-400">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+            <span>AETHELFLOW ENGINE // V2.0</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Workflow Studio Login
+          </h1>
+          <p className="text-xs text-slate-400 font-normal">
+            Decoupled in-memory DAG engine & topological V8 orchestrator
           </p>
-        )}
-
-        <div className="space-y-1">
-          <label className="text-sm text-slate-400">Email</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-slate-500"
-          />
         </div>
 
-        <div className="space-y-1">
-          <label className="text-sm text-slate-400">Password</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-slate-500"
-          />
+        <div className="bg-[#0B111E]/95 border-2 border-white/15 rounded-2xl p-7 shadow-[0_20px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl space-y-5">
+          {error && (
+            <p className="text-xs text-red-400 bg-red-950/50 border border-red-900/60 rounded-xl px-3.5 py-2.5 font-mono">
+              {error}
+            </p>
+          )}
+
+          {/* ============================================================ */}
+          {/* RECRUITER / GUEST 1-CLICK DEMO ACCESS (HIGH VISIBILITY) */}
+          {/* ============================================================ */}
+          <div className="space-y-3 p-4 rounded-xl bg-gradient-to-b from-amber-500/10 to-orange-500/5 border border-amber-500/30">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-amber-400 flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>Recruiter & Reviewer Preview</span>
+              </span>
+              <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold uppercase">
+                Instant Access
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              No registration or credentials required. Instantly launch the studio pre-loaded with production SaaS workflow templates.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleGuestLogin}
+              disabled={status === "loading" || isGuestLoading}
+              className="w-full group relative flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 hover:from-amber-300 hover:to-orange-300 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider shadow-[0_0_25px_rgba(245,158,11,0.35)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
+            >
+              <span className="text-sm">⚡</span>
+              <span>
+                {isGuestLoading ? "Launching Demo Studio..." : "Continue as Guest (Recruiter Preview)"}
+              </span>
+            </button>
+          </div>
+
+          {/* DIVIDER */}
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="flex-shrink mx-3 text-[10px] font-mono uppercase tracking-widest text-slate-500">
+              Or Sign In With Account
+            </span>
+            <div className="flex-grow border-t border-white/10"></div>
+          </div>
+
+          {/* STANDARD CREDENTIAL LOGIN FORM */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono text-slate-300">Email Address</label>
+              <input
+                type="email"
+                required
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-xl bg-slate-900/90 border border-white/15 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-amber-400 transition"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono text-slate-300">Password</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl bg-slate-900/90 border border-white/15 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-amber-400 transition"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={status === "loading" || isGuestLoading}
+              className="w-full bg-slate-800 hover:bg-slate-700 border border-white/15 text-slate-200 hover:text-white disabled:opacity-50 rounded-xl py-2.5 text-xs font-mono font-bold tracking-wider uppercase transition shadow"
+            >
+              {status === "loading" && !isGuestLoading ? "Authenticating..." : "Log In With Password"}
+            </button>
+
+            <p className="text-xs text-slate-400 text-center pt-1 font-mono">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-amber-400 hover:underline">
+                Register
+              </Link>
+            </p>
+          </form>
         </div>
 
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md py-2 text-sm font-medium transition"
-        >
-          {status === "loading" ? "Logging in..." : "Log in"}
-        </button>
-
-        <p className="text-sm text-slate-400 text-center">
-          No account?{" "}
-          <Link to="/register" className="text-indigo-400 hover:underline">
-            Register
-          </Link>
-        </p>
-      </form>
+        {/* Back to landing page */}
+        <div className="text-center">
+          <a
+            href="http://localhost:3000"
+            className="text-xs font-mono text-slate-500 hover:text-slate-300 transition"
+          >
+            &larr; Back to AethelFlow 3D Experience (Port 3000)
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
