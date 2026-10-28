@@ -167,27 +167,30 @@ function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#070A0F] text-slate-100 selection:bg-white/20">
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-8 space-y-8">
         {/* Top Navbar */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-          <div className="flex items-center gap-3">
-            <Link to="/dashboard" className="text-sm text-slate-500 hover:text-slate-300">
+        <div className="flex items-center justify-between border-b border-white/10 pb-5">
+          <div className="flex items-center gap-3.5">
+            <Link
+              to="/dashboard"
+              className="text-xs font-mono text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition"
+            >
               &larr; Workspaces
             </Link>
             {isGuest && (
-              <span className="px-2.5 py-0.5 text-xs font-mono font-medium rounded-md bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
+              <span className="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
                 Guest Mode
               </span>
             )}
-            <h1 className="text-xl font-bold text-slate-100">
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
               {workspace?.name ?? "Workspace"}
             </h1>
           </div>
           <div className="flex items-center gap-3">
             <a
               href="http://localhost:3000"
-              className="text-xs font-mono text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:bg-slate-800 transition"
+              className="text-xs font-mono text-slate-400 hover:text-white px-3.5 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition"
             >
               3D Site &rarr;
             </a>
@@ -201,7 +204,7 @@ function WorkspacePage() {
             ) : (
               <button
                 onClick={() => logout()}
-                className="text-xs font-mono text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-800 hover:bg-red-950/20 transition"
+                className="text-xs font-mono text-slate-400 hover:text-red-400 px-3.5 py-1.5 rounded-lg border border-white/10 hover:bg-red-950/20 transition"
               >
                 Log out
               </button>
