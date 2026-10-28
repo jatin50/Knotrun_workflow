@@ -46,12 +46,30 @@ function topologicalSort(nodes: EngineNode[], connections: EngineConnection[]): 
   return order;
 }
 
+const DAG_CACHE_LIMIT = 500;
+const dagSortCache = new Map<string, string[]>();
+
+function getTopologicalOrder(nodes: EngineNode[], connections: EngineConnection[]): string[] {
+  if (nodes.length <= 1) return nodes.map((n) => n.id);
+  const sig = `${nodes.map((n) => n.id).join(",")}|${connections.map((c) => `${c.sourceNode}:${c.sourceHandle ?? ""}>${c.targetNode}`).join(",")}`;
+  let order = dagSortCache.get(sig);
+  if (!order) {
+    if (dagSortCache.size >= DAG_CACHE_LIMIT) {
+      const oldestKey = dagSortCache.keys().next().value;
+      if (oldestKey) dagSortCache.delete(oldestKey);
+    }
+    order = topologicalSort(nodes, connections);
+    dagSortCache.set(sig, order);
+  }
+  return order;
+}
+
 export async function runWorkflowTest(
   nodes: EngineNode[],
   connections: EngineConnection[],
   triggerOverrides?: Record<string, unknown>
 ): Promise<{ status: "success" | "failed"; results: NodeExecutionResult[] }> {
-  const order = topologicalSort(nodes, connections);
+  const order = getTopologicalOrder(nodes, connections);
   const nodesById = new Map(nodes.map((n) => [n.id, n]));
   const outputs = new Map<string, unknown>();
   const failedOrSkipped = new Set<string>();
