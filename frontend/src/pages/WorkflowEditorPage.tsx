@@ -395,7 +395,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
-                    workflow.active ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                    workflow.active ? "bg-emerald-400" : "bg-slate-500"
                   }`}
                 />
                 {workflow.active ? "Active" : "Inactive"}
@@ -420,7 +420,6 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
             className="flex items-center gap-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-md transition"
             title="Browse and load pre-built enterprise workflow templates"
           >
-            <span>⚡</span>
             <span>Templates</span>
           </button>
           <button

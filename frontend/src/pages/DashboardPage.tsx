@@ -19,6 +19,7 @@ function DashboardPage() {
   const logout = useAuthStore((s) => s.logout);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const isGuest = !user || user.email?.includes("guest");
 
   const [newName, setNewName] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -104,22 +105,14 @@ function DashboardPage() {
         {/* Header Strip */}
         <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-slate-400" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-bold text-white font-['Space_Grotesk']">
-                  Workspaces
-                </h1>
-                {user?.email?.includes("guest") && (
-                  <span className="px-2 py-0.5 text-[10px] font-mono font-medium rounded bg-white/10 text-slate-300 border border-white/15">
-                    GUEST PREVIEW
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Signed in as <span className="text-slate-200 font-medium">{user?.name}</span> ({user?.email})
-              </p>
-            </div>
+            {isGuest && (
+              <span className="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
+                Guest Mode
+              </span>
+            )}
+            <h1 className="text-xl sm:text-2xl font-bold text-white font-['Space_Grotesk']">
+              Workspaces
+            </h1>
           </div>
           <div className="flex items-center gap-3">
             <a
@@ -128,12 +121,21 @@ function DashboardPage() {
             >
               3D Site &rarr;
             </a>
-            <button
-              onClick={() => logout()}
-              className="text-xs font-mono text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-red-950/20 transition"
-            >
-              Log out
-            </button>
+            {isGuest ? (
+              <Link
+                to="/login"
+                className="text-xs font-mono font-semibold text-slate-900 bg-white hover:bg-slate-200 px-4 py-1.5 rounded-lg transition shadow-sm"
+              >
+                Log In
+              </Link>
+            ) : (
+              <button
+                onClick={() => logout()}
+                className="text-xs font-mono text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-red-950/20 transition"
+              >
+                Log out
+              </button>
+            )}
           </div>
         </div>
 

@@ -17,6 +17,7 @@ import {
   type Credential,
 } from "../lib/credential.api";
 import { saveGraph } from "../lib/graph.api";
+import { useAuthStore } from "../store/auth.store";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
 import { instantiateTemplate, type WorkflowTemplate } from "../templates/workflowTemplates";
 
@@ -24,6 +25,9 @@ function WorkspacePage() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const isGuest = !user || user.email?.includes("guest");
 
   const [activeTab, setActiveTab] = useState<"workflows" | "credentials">("workflows");
 
@@ -165,13 +169,44 @@ function WorkspacePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
       <div className="max-w-3xl mx-auto space-y-6">
-        <div>
-          <Link to="/dashboard" className="text-sm text-slate-500 hover:text-slate-300">
-            &larr; Workspaces
-          </Link>
-          <h1 className="text-2xl font-bold mt-1 text-slate-100">
-            {workspace?.name ?? "Workspace"}
-          </h1>
+        {/* Top Navbar */}
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-3">
+            <Link to="/dashboard" className="text-sm text-slate-500 hover:text-slate-300">
+              &larr; Workspaces
+            </Link>
+            {isGuest && (
+              <span className="px-2.5 py-0.5 text-xs font-mono font-medium rounded-md bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
+                Guest Mode
+              </span>
+            )}
+            <h1 className="text-xl font-bold text-slate-100">
+              {workspace?.name ?? "Workspace"}
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="http://localhost:3000"
+              className="text-xs font-mono text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:bg-slate-800 transition"
+            >
+              3D Site &rarr;
+            </a>
+            {isGuest ? (
+              <Link
+                to="/login"
+                className="text-xs font-mono font-semibold text-slate-900 bg-white hover:bg-slate-200 px-4 py-1.5 rounded-lg transition shadow-sm"
+              >
+                Log In
+              </Link>
+            ) : (
+              <button
+                onClick={() => logout()}
+                className="text-xs font-mono text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-800 hover:bg-red-950/20 transition"
+              >
+                Log out
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Navigation Tabs */}
