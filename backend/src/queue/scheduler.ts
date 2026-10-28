@@ -62,14 +62,18 @@ export async function reconcileAllSchedulers(): Promise<void> {
       },
     });
 
+    const validSchedulerKeys = new Set<string>();
     let count = 0;
     for (const workflow of activeWorkflows) {
       for (const node of workflow.nodes) {
         const cron = (node.configuration as { cron?: string } | undefined)?.cron;
         if (!cron || !cron.trim()) continue;
 
+        const jobId = scheduleJobId(node.id);
+        validSchedulerKeys.add(jobId);
+
         await executionQueue.upsertJobScheduler(
-          scheduleJobId(node.id),
+          jobId,
           { pattern: cron.trim() },
           {
             name: "scheduled-trigger",
@@ -79,6 +83,16 @@ export async function reconcileAllSchedulers(): Promise<void> {
         count++;
       }
     }
+
+    // Remove any orphaned schedulers from inactive or deleted workflows
+    const existingSchedulers = await executionQueue.getJobSchedulers();
+    for (const s of existingSchedulers) {
+      if (!validSchedulerKeys.has(s.key)) {
+        await executionQueue.removeJobScheduler(s.key).catch(() => {});
+        console.log(`[Scheduler] Removed stale scheduler ${s.key}`);
+      }
+    }
+
     console.log(`[Scheduler] Reconciled ${count} active schedule triggers in BullMQ.`);
   } catch (err) {
     console.warn("[Scheduler] Schedulers reconciliation warning:", (err as Error).message);
