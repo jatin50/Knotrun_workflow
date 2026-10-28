@@ -69,7 +69,6 @@ function LoginPage() {
           <div className="space-y-3 p-4 rounded-xl bg-white/[0.03] border border-white/10">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono font-medium tracking-wider uppercase text-slate-300 flex items-center gap-1.5">
-                <span>⚡</span>
                 <span>Recruiter & Reviewer Preview</span>
               </span>
               <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold uppercase">
@@ -85,9 +84,8 @@ function LoginPage() {
               type="button"
               onClick={handleGuestLogin}
               disabled={status === "loading" || isGuestLoading}
-              className="w-full group relative flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-white hover:bg-slate-200 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 shadow-lg"
+              className="w-full group relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white hover:bg-slate-200 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 shadow-lg"
             >
-              <span>⚡</span>
               <span>
                 {isGuestLoading ? "Launching Demo Studio..." : "Continue as Guest (Recruiter Preview)"}
               </span>

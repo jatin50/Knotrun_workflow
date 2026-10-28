@@ -222,7 +222,6 @@ function WorkspacePage() {
                 onClick={() => setIsTemplateModalOpen(true)}
                 className="flex items-center justify-center gap-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:text-white transition whitespace-nowrap shadow-sm"
               >
-                <span>⚡</span>
                 <span>Browse Templates</span>
               </button>
             </div>
@@ -236,8 +235,10 @@ function WorkspacePage() {
             <div className="space-y-2">
               {workflows?.length === 0 && (
                 <div className="p-8 text-center bg-slate-900/50 border border-slate-800 rounded-xl space-y-3">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-indigo-500/10 flex items-center justify-center text-2xl border border-indigo-500/20">
-                    ⚡
+                  <div className="w-12 h-12 mx-auto rounded-full bg-slate-800 flex items-center justify-center text-slate-300 border border-slate-700">
+                    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-slate-200">No workflows in this workspace yet</h3>
@@ -247,9 +248,8 @@ function WorkspacePage() {
                   </div>
                   <button
                     onClick={() => setIsTemplateModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition shadow"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-white text-slate-900 transition shadow"
                   >
-                    <span>⚡</span>
                     <span>Explore SaaS Templates</span>
                   </button>
                 </div>
@@ -311,7 +311,7 @@ function WorkspacePage() {
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              wf.active ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                              wf.active ? "bg-emerald-400" : "bg-slate-500"
                             }`}
                           />
                           {wf.active ? "Active" : "Inactive"}

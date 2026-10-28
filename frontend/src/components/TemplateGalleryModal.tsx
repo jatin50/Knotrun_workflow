@@ -43,8 +43,10 @@ export default function TemplateGalleryModal({
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/80 bg-slate-900/60">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-lg">
-                ⚡
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">
+                <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
               </span>
               <h2 className="text-xl font-bold text-slate-100">SaaS Workflow Template Gallery</h2>
               <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">
@@ -146,7 +148,7 @@ export default function TemplateGalleryModal({
               {/* Card Footer & Action */}
               <div className="pt-3 border-t border-slate-700/40 flex items-center justify-between mt-auto">
                 <span className="text-[11px] font-mono text-emerald-400/90 font-medium">
-                  ⚡ {template.estimatedOps}
+                  {template.estimatedOps}
                 </span>
 
                 <button
