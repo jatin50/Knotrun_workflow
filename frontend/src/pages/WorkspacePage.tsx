@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchWorkspace } from "../lib/workspace.api";
 import {
@@ -16,12 +16,20 @@ import {
   deleteCredential,
   type Credential,
 } from "../lib/credential.api";
+import { saveGraph } from "../lib/graph.api";
+import TemplateGalleryModal from "../components/TemplateGalleryModal";
+import type { WorkflowTemplate } from "../templates/workflowTemplates";
 
 function WorkspacePage() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"workflows" | "credentials">("workflows");
+
+  // Template Modal state
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isTemplateCreating, setIsTemplateCreating] = useState(false);
 
   // Workflow state
   const [newWorkflowName, setNewWorkflowName] = useState("");
@@ -137,6 +145,22 @@ function WorkspacePage() {
     }
   }
 
+  async function handleSelectTemplate(template: WorkflowTemplate) {
+    if (!workspaceId) return;
+    setIsTemplateCreating(true);
+    try {
+      const newWf = await createWorkflow(workspaceId, template.title);
+      await saveGraph(newWf.id, template.nodes, template.connections);
+      queryClient.invalidateQueries({ queryKey: ["workflows", workspaceId] });
+      setIsTemplateModalOpen(false);
+      navigate(`/workflows/${newWf.id}`);
+    } catch (err) {
+      alert("Failed to load template: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setIsTemplateCreating(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -176,21 +200,31 @@ function WorkspacePage() {
         {/* WORKFLOWS TAB */}
         {activeTab === "workflows" && (
           <div className="space-y-4">
-            <form onSubmit={handleCreateWorkflow} className="flex gap-2">
-              <input
-                value={newWorkflowName}
-                onChange={(e) => setNewWorkflowName(e.target.value)}
-                placeholder="New workflow name..."
-                className="flex-1 rounded-md bg-slate-900 border border-slate-800 px-3 py-2 text-sm outline-none focus:border-indigo-500"
-              />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <form onSubmit={handleCreateWorkflow} className="flex-1 flex gap-2">
+                <input
+                  value={newWorkflowName}
+                  onChange={(e) => setNewWorkflowName(e.target.value)}
+                  placeholder="New workflow name..."
+                  className="flex-1 rounded-md bg-slate-900 border border-slate-800 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+                />
+                <button
+                  type="submit"
+                  disabled={createWorkflowMutation.isPending}
+                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md px-4 py-2 text-sm font-medium transition whitespace-nowrap"
+                >
+                  {createWorkflowMutation.isPending ? "Creating..." : "Create Blank"}
+                </button>
+              </form>
               <button
-                type="submit"
-                disabled={createWorkflowMutation.isPending}
-                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md px-4 py-2 text-sm font-medium transition"
+                type="button"
+                onClick={() => setIsTemplateModalOpen(true)}
+                className="flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 px-4 py-2 text-sm font-semibold text-white transition shadow-sm whitespace-nowrap"
               >
-                {createWorkflowMutation.isPending ? "Creating..." : "Create Workflow"}
+                <span>⚡</span>
+                <span>Browse SaaS Templates</span>
               </button>
-            </form>
+            </div>
             {createWorkflowMutation.isError && (
               <p className="text-sm text-red-400">Couldn't create workflow. Try again.</p>
             )}
@@ -200,9 +234,23 @@ function WorkspacePage() {
 
             <div className="space-y-2">
               {workflows?.length === 0 && (
-                <div className="p-8 text-center bg-slate-900/50 border border-slate-800 rounded-lg">
-                  <p className="text-slate-400 text-sm">No workflows yet.</p>
-                  <p className="text-slate-600 text-xs mt-1">Create one above to get started.</p>
+                <div className="p-8 text-center bg-slate-900/50 border border-slate-800 rounded-xl space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-indigo-500/10 flex items-center justify-center text-2xl border border-indigo-500/20">
+                    ⚡
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-200">No workflows in this workspace yet</h3>
+                    <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">
+                      Create a blank workflow or start instantly with one of our pre-built enterprise SaaS templates.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsTemplateModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition shadow"
+                  >
+                    <span>⚡</span>
+                    <span>Explore SaaS Templates</span>
+                  </button>
                 </div>
               )}
 
@@ -390,6 +438,13 @@ function WorkspacePage() {
           </div>
         )}
       </div>
+
+      <TemplateGalleryModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+        isCreating={isTemplateCreating}
+      />
     </div>
   );
 }

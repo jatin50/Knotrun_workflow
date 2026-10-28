@@ -28,6 +28,8 @@ import WorkflowNode, { type WorkflowNodeData } from "../components/WorkFlow";
 import NodePalette from "../components/NodePalette";
 import NodeConfigPanel from "../components/NodeConfigPanel";
 import TestResultsPanel from "../components/TestResultsPanel";
+import TemplateGalleryModal from "../components/TemplateGalleryModal";
+import type { WorkflowTemplate } from "../templates/workflowTemplates";
 
 const nodeTypes = { workflowNode: WorkflowNode };
 
@@ -60,6 +62,24 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   const [loadedOnce, setLoadedOnce] = useState(false);
   const [testResult, setTestResult] = useState<TestRunResult | null>(null);
   const [runMessage, setRunMessage] = useState<string | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+  async function handleLoadTemplateInEditor(template: WorkflowTemplate) {
+    const flowNodes = template.nodes.map(apiNodeToFlowNode);
+    const flowEdges = template.connections.map((c, i) => apiConnectionToEdge(c, i));
+    setNodes(flowNodes);
+    setEdges(flowEdges);
+    setSelectedNodeId(null);
+    setRunMessage(`Loaded "${template.title}" template!`);
+    setIsTemplateModalOpen(false);
+    try {
+      await saveGraph(workflowId, template.nodes, template.connections);
+      queryClient.invalidateQueries({ queryKey: ["graph", workflowId] });
+      queryClient.invalidateQueries({ queryKey: ["triggers", workflowId] });
+    } catch {
+      // auto-save fallback
+    }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["graph", workflowId],
@@ -279,6 +299,15 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
             Executions &rarr;
           </Link>
           <button
+            type="button"
+            onClick={() => setIsTemplateModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white px-2.5 py-1.5 rounded-md transition shadow-sm"
+            title="Browse and load pre-built enterprise workflow templates"
+          >
+            <span>⚡</span>
+            <span>Templates</span>
+          </button>
+          <button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
             className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 rounded-md px-3 py-1.5 text-sm font-medium transition"
@@ -358,6 +387,12 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
           }}
         />
       )}
+
+      <TemplateGalleryModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSelectTemplate={handleLoadTemplateInEditor}
+      />
     </div>
   );
 }
