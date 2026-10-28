@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import { executionQueue } from "../queue/executionQueue";
+import { executeWorkflowJob } from "../worker";
+import { isRedisReady } from "../queue/connection";
 
 async function assertWorkflowOwnership(workflowId: string, userId: string) {
   return prisma.workflow.findFirst({
@@ -26,23 +28,28 @@ export async function startExecution(req: Request, res: Response) {
     data: { workflowId, status: "PENDING" },
   });
 
+  const jobData = { executionId: execution.id, workflowId };
+
+  // Try dispatching to BullMQ queue. If Redis is unavailable or times out (>1500ms),
+  // fall back to asynchronous in-process execution to ensure the job runs immediately.
+  let queuedInBullMq = false;
   try {
-    await executionQueue.add("run", { executionId: execution.id, workflowId });
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Queue dispatch timeout")), 1500)
+    );
+    await Promise.race([executionQueue.add("run", jobData), timeoutPromise]);
+    queuedInBullMq = true;
   } catch (queueErr) {
-    await prisma.execution.update({
-      where: { id: execution.id },
-      data: { status: "FAILED", finishedAt: new Date() },
-    });
-    return res.status(503).json({
-      error:
-        "Queue worker is currently unreachable. Make sure Redis is running and REDIS_URL in .env is valid, or use 'Test (Sync)'.",
-      details: (queueErr as Error).message,
+    console.warn(`[Queue] BullMQ dispatch skipped or timed out (${(queueErr as Error).message}). Executing in-process async worker.`);
+    setImmediate(() => {
+      executeWorkflowJob(jobData).catch((err) => {
+        console.error(`[InProcessWorker] Execution ${execution.id} error:`, err);
+      });
     });
   }
 
-  // 202 Accepted: the job is queued, not finished — the client polls
-  // GET /api/executions/:id for status instead of waiting here.
-  return res.status(202).json({ execution });
+  // 202 Accepted: the job is queued/dispatched immediately without blocking the client.
+  return res.status(202).json({ execution, mode: queuedInBullMq ? "queue" : "in-process" });
 }
 
 export async function listExecutions(req: Request, res: Response) {
@@ -101,7 +108,7 @@ export async function getExecutionLogs(req: Request, res: Response) {
       id: d.id,
       executionId: d.executionId,
       nodeId: d.nodeId,
-      nodeType: d.node.type,
+      nodeType: d.node?.type ?? "unknown",
       input: d.input,
       output: d.output,
     })),

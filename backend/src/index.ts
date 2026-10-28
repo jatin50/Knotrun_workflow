@@ -10,13 +10,14 @@ import executionRoutes from "./routes/execution.routes";
 import webhookRoutes from "./routes/webhook.routes";
 import credentialRoutes from "./routes/credential.routes";
 import { authenticate } from "./middleware/auth.middleware";
+import prisma from "./lib/prisma";
+import { initWorker } from "./worker";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 
 // Node's fetch tries IPv6 first by default. On networks with broken/slow
-// IPv6 routing (common on some home routers), this causes HTTP Request
-// nodes to hang until they time out even though the URL is fine —
+// IPv6 routing, this causes HTTP Request nodes to hang until they time out —
 // forcing IPv4-first resolution fixes it.
 dns.setDefaultResultOrder("ipv4first");
 
@@ -37,21 +38,56 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
-// Phase 2: authentication (public routes).
+// Authentication (public routes)
 app.use("/api/auth", authRoutes);
 
-// Phase 3: workspaces & workflows (CRUD only, no execution yet).
-// Everything below this line requires a valid access token.
+// Workspaces, workflows, executions, credentials (JWT protected)
 app.use("/api/workspaces", authenticate, workspaceRoutes);
 app.use("/api/workflows", authenticate, workflowRoutes);
 app.use("/api/executions", authenticate, executionRoutes);
 app.use("/api/credentials", authenticate, credentialRoutes);
 
-// Phase 7: public webhook endpoint — deliberately NOT behind `authenticate`,
-// since external systems calling this have no JWT. Security instead comes
-// from the unguessable per-trigger token in the URL itself.
+// Webhook endpoints (token authenticated)
 app.use("/api/webhooks", webhookRoutes);
 
-app.listen(PORT, () => {
+async function cleanupStaleExecutions() {
+  try {
+    const updated = await prisma.execution.updateMany({
+      where: {
+        status: { in: ["PENDING", "RUNNING"] },
+        startedAt: null,
+      },
+      data: {
+        status: "FAILED",
+        finishedAt: new Date(),
+        logs: JSON.stringify([
+          {
+            nodeId: "init",
+            type: "system",
+            status: "failed",
+            error: "Execution was aborted because worker was offline prior to server restart",
+            durationMs: 0,
+          },
+        ]),
+      },
+    });
+    if (updated.count > 0) {
+      console.log(`[Startup] Cleaned up ${updated.count} orphaned pending executions.`);
+    }
+  } catch (err) {
+    console.warn("[Startup] Stale execution cleanup skipped:", (err as Error).message);
+  }
+}
+
+app.listen(PORT, async () => {
   console.log(`Backend listening on http://localhost:${PORT}`);
+  await cleanupStaleExecutions();
+
+  if (process.env.DISABLE_EMBEDDED_WORKER !== "true") {
+    try {
+      initWorker();
+    } catch (workerErr) {
+      console.warn("[Worker] Embedded worker startup warning:", (workerErr as Error).message);
+    }
+  }
 });

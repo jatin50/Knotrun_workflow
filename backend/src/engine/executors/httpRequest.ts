@@ -89,6 +89,9 @@ const httpRequest: NodeExecutor = async (config, input, context) => {
     if (err instanceof Error && err.name === "AbortError") {
       throw new Error("Request timed out after 15 seconds");
     }
+    if (err instanceof Error && (err as any).cause) {
+      throw new Error(`HTTP request failed: ${(err as any).cause?.message || err.message}`);
+    }
     throw err;
   } finally {
     clearTimeout(timeout);

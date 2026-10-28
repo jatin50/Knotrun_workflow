@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import { executionQueue } from "../queue/executionQueue";
+import { executeWorkflowJob } from "../worker";
 
 const MAX_PAYLOAD_BYTES = 1_000_000; // 1MB payload limit
 
@@ -45,7 +46,7 @@ export async function receiveWebhook(req: Request, res: Response) {
     "x-forwarded-for": req.headers["x-forwarded-for"],
   };
 
-  await executionQueue.add("run", {
+  const jobData = {
     executionId: execution.id,
     workflowId: trigger.workflowId,
     triggerNodeId: trigger.nodeId,
@@ -54,7 +55,21 @@ export async function receiveWebhook(req: Request, res: Response) {
       headers: safeHeaders,
       receivedAt: new Date().toISOString(),
     },
-  });
+  };
+
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Queue dispatch timeout")), 1500)
+    );
+    await Promise.race([executionQueue.add("run", jobData), timeoutPromise]);
+  } catch (err) {
+    console.warn(`[Webhook] BullMQ dispatch skipped (${(err as Error).message}). Executing in-process.`);
+    setImmediate(() => {
+      executeWorkflowJob(jobData).catch((e) => {
+        console.error(`[WebhookInProcess] Execution ${execution.id} error:`, e);
+      });
+    });
+  }
 
   return res.status(202).json({ executionId: execution.id });
 }
