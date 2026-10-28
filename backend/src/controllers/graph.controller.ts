@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma";
 import { executionQueue } from "../queue/executionQueue";
+import { connection } from "../queue/connection";
 
 interface IncomingNode {
   id: string; // client-generated id (React Flow's node.id) — used as the DB id too
@@ -181,35 +182,45 @@ export async function saveGraph(req: Request, res: Response) {
     );
 
     // Reconcile BullMQ's repeatable jobs for schedule triggers safely
-    // (Redis errors must never abort a successfully saved workflow graph)
-    try {
-      const currentNodeIds = new Set(typedNodes.map((n) => n.id));
-      const removedOrChangedScheduleNodeIds = existingTriggers
-        .filter((t: DbTrigger) => t.type === "schedule")
-        .map((t: DbTrigger) => t.nodeId)
-        .filter((nodeId: string) => {
-          const stillExists = currentNodeIds.has(nodeId);
-          const stillSchedule = typedNodes.find((n) => n.id === nodeId)?.type === "trigger.schedule";
-          return !stillExists || !stillSchedule;
-        });
+    // (Never block saveGraph if Redis is offline or slow)
+    if (connection.status === "ready") {
+      try {
+        const withTimeout = <T>(p: Promise<T>, ms = 1200) =>
+          Promise.race([
+            p,
+            new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Redis timeout")), ms)),
+          ]);
 
-      for (const nodeId of removedOrChangedScheduleNodeIds) {
-        await executionQueue.removeJobScheduler(scheduleJobId(nodeId)).catch(() => {});
+        const currentNodeIds = new Set(typedNodes.map((n) => n.id));
+        const removedOrChangedScheduleNodeIds = existingTriggers
+          .filter((t: DbTrigger) => t.type === "schedule")
+          .map((t: DbTrigger) => t.nodeId)
+          .filter((nodeId: string) => {
+            const stillExists = currentNodeIds.has(nodeId);
+            const stillSchedule = typedNodes.find((n) => n.id === nodeId)?.type === "trigger.schedule";
+            return !stillExists || !stillSchedule;
+          });
+
+        for (const nodeId of removedOrChangedScheduleNodeIds) {
+          await withTimeout(executionQueue.removeJobScheduler(scheduleJobId(nodeId))).catch(() => {});
+        }
+
+        const scheduleNodes = typedNodes.filter((n) => n.type === "trigger.schedule");
+        for (const node of scheduleNodes) {
+          const cron = (node.configuration as { cron?: string } | undefined)?.cron;
+          if (!cron) continue;
+
+          await withTimeout(
+            executionQueue.upsertJobScheduler(
+              scheduleJobId(node.id),
+              { pattern: cron },
+              { name: "scheduled-trigger", data: { workflowId: id, triggerNodeId: node.id } }
+            )
+          ).catch(() => {});
+        }
+      } catch (queueErr) {
+        console.warn("[Queue] BullMQ scheduler reconciliation skipped:", (queueErr as Error).message);
       }
-
-      const scheduleNodes = typedNodes.filter((n) => n.type === "trigger.schedule");
-      for (const node of scheduleNodes) {
-        const cron = (node.configuration as { cron?: string } | undefined)?.cron;
-        if (!cron) continue;
-
-        await executionQueue.upsertJobScheduler(
-          scheduleJobId(node.id),
-          { pattern: cron },
-          { name: "scheduled-trigger", data: { workflowId: id, triggerNodeId: node.id } }
-        ).catch(() => {});
-      }
-    } catch (queueErr) {
-      console.warn("[Queue] BullMQ scheduler reconciliation skipped:", (queueErr as Error).message);
     }
 
     return res.json({ ok: true });

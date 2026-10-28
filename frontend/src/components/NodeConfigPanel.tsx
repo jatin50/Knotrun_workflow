@@ -23,6 +23,7 @@ function NodeConfigPanel({
 }: Props) {
   const def = getNodeTypeDef(nodeType);
   const [copied, setCopied] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   function set(key: string, value: unknown) {
     onChange({ ...configuration, [key]: value });
@@ -823,12 +824,46 @@ function NodeConfigPanel({
         </div>
       )}
 
-      <button
-        onClick={onDelete}
-        className="text-xs text-red-400 hover:text-red-300 transition pt-3 border-t border-slate-800 w-full text-left font-medium"
-      >
-        Delete this node
-      </button>
+      <div className="pt-3 border-t border-slate-800">
+        {!showDeleteConfirm ? (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition font-medium"
+          >
+            <span>🗑️</span>
+            <span>Delete this node</span>
+          </button>
+        ) : (
+          <div className="p-3 bg-rose-950/40 border border-rose-800/80 rounded-lg space-y-2 animate-in fade-in duration-150">
+            <p className="text-xs text-rose-200 font-semibold">
+              Delete this {def.label}?
+            </p>
+            <p className="text-[11px] text-slate-400">
+              All connected incoming & outgoing wires will be removed. You can also press <span className="font-mono text-indigo-300 bg-slate-800 px-1 py-0.5 rounded">Ctrl + Z</span> to restore it.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  onDelete();
+                }}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold py-1.5 rounded transition shadow-sm"
+              >
+                Yes, Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium py-1.5 rounded transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

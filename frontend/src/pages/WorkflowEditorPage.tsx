@@ -65,9 +65,57 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(null);
 
+  // Undo history stack & unsaved changes tracking
+  const [undoStack, setUndoStack] = useState<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const pushUndoSnapshot = useCallback(() => {
+    setUndoStack((prev) => [...prev.slice(-25), { nodes: JSON.parse(JSON.stringify(nodes)), edges: [...edges] }]);
+  }, [nodes, edges]);
+
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) return;
+    const last = undoStack[undoStack.length - 1];
+    setUndoStack((prev) => prev.slice(0, prev.length - 1));
+    setNodes(last.nodes);
+    setEdges(last.edges);
+    setSelectedNodeId(null);
+    setHasUnsavedChanges(true);
+    setRunMessage("Undo: Restored previous canvas state (Ctrl+Z)");
+    setTimeout(() => setRunMessage(null), 2500);
+  }, [undoStack, setNodes, setEdges]);
+
+  // Global Ctrl+Z keyboard shortcut
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        handleUndo();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleUndo]);
+
+  // Warn if leaving with unsaved changes
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   async function handleLoadTemplateInEditor(template: WorkflowTemplate) {
     setLoadingTemplateId(template.id);
     try {
+      pushUndoSnapshot();
       const { nodes: freshNodes, connections: freshConnections } = instantiateTemplate(template);
       const flowNodes = freshNodes.map(apiNodeToFlowNode);
       const flowEdges = freshConnections.map((c, i) => apiConnectionToEdge(c, i));
@@ -77,6 +125,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
       setRunMessage(`Loaded "${template.title}" template!`);
       setIsTemplateModalOpen(false);
       await saveGraph(workflowId, freshNodes, freshConnections);
+      setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ["graph", workflowId] });
       queryClient.invalidateQueries({ queryKey: ["triggers", workflowId] });
     } catch (err) {
@@ -147,10 +196,27 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
       return saveGraph(workflowId, apiNodes, apiConnections);
     },
     onSuccess: () => {
+      setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ["graph", workflowId] });
       queryClient.invalidateQueries({ queryKey: ["triggers", workflowId] });
+      setRunMessage("All changes saved ✓");
+      setTimeout(() => setRunMessage(null), 2500);
+    },
+    onError: (err) => {
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setRunMessage(`Save error: ${msg}`);
+      setTimeout(() => setRunMessage(null), 5000);
     },
   });
+
+  // Debounced auto-save: persist changes 2 seconds after user stops editing
+  useEffect(() => {
+    if (!hasUnsavedChanges || nodes.length === 0) return;
+    const timer = setTimeout(() => {
+      saveMutation.mutate();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [hasUnsavedChanges, nodes, edges]);
 
   const testMutation = useMutation({
     mutationFn: async () => {
@@ -196,8 +262,12 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   });
 
   const onConnect = useCallback(
-    (connection: Connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges]
+    (connection: Connection) => {
+      pushUndoSnapshot();
+      setHasUnsavedChanges(true);
+      setEdges((eds) => addEdge(connection, eds));
+    },
+    [setEdges, pushUndoSnapshot]
   );
 
   const onDragOver = useCallback((e: DragEvent) => {
@@ -221,15 +291,18 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
         data: { nodeType, configuration: { ...def.defaultConfig } } as WorkflowNodeData,
       };
 
+      pushUndoSnapshot();
+      setHasUnsavedChanges(true);
       setNodes((nds) => [...nds, newNode]);
     },
-    [screenToFlowPosition, setNodes]
+    [screenToFlowPosition, setNodes, pushUndoSnapshot]
   );
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedNodeTrigger = triggers?.find((t) => t.nodeId === selectedNodeId);
 
   function updateSelectedNodeConfig(configuration: NodeConfig) {
+    setHasUnsavedChanges(true);
     setNodes((nds) =>
       nds.map((n) =>
         n.id === selectedNodeId
@@ -240,9 +313,13 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   }
 
   function deleteSelectedNode() {
+    pushUndoSnapshot();
+    setHasUnsavedChanges(true);
     setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
     setEdges((eds) => eds.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId));
     setSelectedNodeId(null);
+    setRunMessage("Node deleted. Press Ctrl+Z to undo.");
+    setTimeout(() => setRunMessage(null), 3000);
   }
 
   if (isLoading) {
@@ -302,17 +379,25 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
                 {workflow.active ? "Active" : "Inactive"}
               </button>
             )}
+            <button
+              type="button"
+              onClick={handleUndo}
+              disabled={undoStack.length === 0}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-300 hover:text-white disabled:opacity-40 rounded-md bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
+              title="Undo last change (Ctrl+Z)"
+            >
+              <span>↶ Undo</span>
+              {undoStack.length > 0 && (
+                <span className="text-[10px] font-mono px-1 rounded bg-slate-800 text-indigo-400">
+                  {undoStack.length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {runMessage && (
             <span className="text-xs text-indigo-400 animate-pulse">{runMessage}</span>
-          )}
-          {saveMutation.isSuccess && (
-            <span className="text-xs text-emerald-400">Saved</span>
-          )}
-          {saveMutation.isError && (
-            <span className="text-xs text-red-400">Save failed</span>
           )}
           <Link
             to={`/workflows/${workflowId}/executions`}
@@ -332,9 +417,15 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
           <button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
-            className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 rounded-md px-3 py-1.5 text-sm font-medium transition"
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
+              hasUnsavedChanges
+                ? "bg-amber-600 hover:bg-amber-500 text-white shadow-sm ring-1 ring-amber-400/50"
+                : "bg-slate-800 hover:bg-slate-700 text-slate-200"
+            }`}
+            title={hasUnsavedChanges ? "You have unsaved changes (Auto-saving...)" : "All changes saved"}
           >
-            {saveMutation.isPending ? "Saving..." : "Save"}
+            {hasUnsavedChanges && <span className="w-1.5 h-1.5 rounded-full bg-amber-200 animate-pulse" />}
+            <span>{saveMutation.isPending ? "Saving..." : hasUnsavedChanges ? "Save Changes" : "Saved ✓"}</span>
           </button>
           <button
             onClick={() => testMutation.mutate()}
@@ -369,6 +460,12 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onNodesDelete={() => {
+              pushUndoSnapshot();
+              setHasUnsavedChanges(true);
+              setRunMessage("Node deleted. Press Ctrl+Z to undo.");
+              setTimeout(() => setRunMessage(null), 3000);
+            }}
             nodeTypes={nodeTypes}
             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
             onPaneClick={() => setSelectedNodeId(null)}
