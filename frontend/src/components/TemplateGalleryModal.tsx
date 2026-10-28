@@ -5,14 +5,14 @@ interface TemplateGalleryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectTemplate: (template: WorkflowTemplate) => void;
-  isCreating?: boolean;
+  loadingTemplateId?: string | null;
 }
 
 export default function TemplateGalleryModal({
   isOpen,
   onClose,
   onSelectTemplate,
-  isCreating = false,
+  loadingTemplateId = null,
 }: TemplateGalleryModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -151,11 +151,14 @@ export default function TemplateGalleryModal({
 
                 <button
                   onClick={() => onSelectTemplate(template)}
-                  disabled={isCreating}
+                  disabled={loadingTemplateId !== null}
                   className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm hover:shadow flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  {isCreating ? (
-                    "Loading..."
+                  {loadingTemplateId === template.id ? (
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span>Loading...</span>
+                    </span>
                   ) : (
                     <>
                       <span>Use Template</span>

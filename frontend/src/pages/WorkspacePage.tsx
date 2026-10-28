@@ -18,7 +18,7 @@ import {
 } from "../lib/credential.api";
 import { saveGraph } from "../lib/graph.api";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
-import type { WorkflowTemplate } from "../templates/workflowTemplates";
+import { instantiateTemplate, type WorkflowTemplate } from "../templates/workflowTemplates";
 
 function WorkspacePage() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -29,7 +29,7 @@ function WorkspacePage() {
 
   // Template Modal state
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [isTemplateCreating, setIsTemplateCreating] = useState(false);
+  const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(null);
 
   // Workflow state
   const [newWorkflowName, setNewWorkflowName] = useState("");
@@ -147,17 +147,18 @@ function WorkspacePage() {
 
   async function handleSelectTemplate(template: WorkflowTemplate) {
     if (!workspaceId) return;
-    setIsTemplateCreating(true);
+    setLoadingTemplateId(template.id);
     try {
+      const { nodes, connections } = instantiateTemplate(template);
       const newWf = await createWorkflow(workspaceId, template.title);
-      await saveGraph(newWf.id, template.nodes, template.connections);
+      await saveGraph(newWf.id, nodes, connections);
       queryClient.invalidateQueries({ queryKey: ["workflows", workspaceId] });
       setIsTemplateModalOpen(false);
       navigate(`/workflows/${newWf.id}`);
     } catch (err) {
       alert("Failed to load template: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
-      setIsTemplateCreating(false);
+      setLoadingTemplateId(null);
     }
   }
 
@@ -443,7 +444,7 @@ function WorkspacePage() {
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         onSelectTemplate={handleSelectTemplate}
-        isCreating={isTemplateCreating}
+        loadingTemplateId={loadingTemplateId}
       />
     </div>
   );

@@ -29,7 +29,7 @@ import NodePalette from "../components/NodePalette";
 import NodeConfigPanel from "../components/NodeConfigPanel";
 import TestResultsPanel from "../components/TestResultsPanel";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
-import type { WorkflowTemplate } from "../templates/workflowTemplates";
+import { instantiateTemplate, type WorkflowTemplate } from "../templates/workflowTemplates";
 
 const nodeTypes = { workflowNode: WorkflowNode };
 
@@ -63,21 +63,26 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
   const [testResult, setTestResult] = useState<TestRunResult | null>(null);
   const [runMessage, setRunMessage] = useState<string | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(null);
 
   async function handleLoadTemplateInEditor(template: WorkflowTemplate) {
-    const flowNodes = template.nodes.map(apiNodeToFlowNode);
-    const flowEdges = template.connections.map((c, i) => apiConnectionToEdge(c, i));
-    setNodes(flowNodes);
-    setEdges(flowEdges);
-    setSelectedNodeId(null);
-    setRunMessage(`Loaded "${template.title}" template!`);
-    setIsTemplateModalOpen(false);
+    setLoadingTemplateId(template.id);
     try {
-      await saveGraph(workflowId, template.nodes, template.connections);
+      const { nodes: freshNodes, connections: freshConnections } = instantiateTemplate(template);
+      const flowNodes = freshNodes.map(apiNodeToFlowNode);
+      const flowEdges = freshConnections.map((c, i) => apiConnectionToEdge(c, i));
+      setNodes(flowNodes);
+      setEdges(flowEdges);
+      setSelectedNodeId(null);
+      setRunMessage(`Loaded "${template.title}" template!`);
+      setIsTemplateModalOpen(false);
+      await saveGraph(workflowId, freshNodes, freshConnections);
       queryClient.invalidateQueries({ queryKey: ["graph", workflowId] });
       queryClient.invalidateQueries({ queryKey: ["triggers", workflowId] });
-    } catch {
-      // auto-save fallback
+    } catch (err) {
+      alert("Failed to load template: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setLoadingTemplateId(null);
     }
   }
 
@@ -416,6 +421,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         onSelectTemplate={handleLoadTemplateInEditor}
+        loadingTemplateId={loadingTemplateId}
       />
     </div>
   );

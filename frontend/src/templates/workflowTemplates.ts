@@ -13,6 +13,34 @@ export interface WorkflowTemplate {
   connections: ApiConnection[];
 }
 
+/**
+ * Instantiates a template with fresh, globally unique node IDs and remapped connections.
+ * Prevents PostgreSQL primary key collisions on the `Node.id` field across multiple workflows.
+ */
+export function instantiateTemplate(template: WorkflowTemplate): {
+  nodes: ApiNode[];
+  connections: ApiConnection[];
+} {
+  const idMap = new Map<string, string>();
+
+  const nodes: ApiNode[] = template.nodes.map((node, idx) => {
+    const uniqueId = `node_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`;
+    idMap.set(node.id, uniqueId);
+    return {
+      ...node,
+      id: uniqueId,
+    };
+  });
+
+  const connections: ApiConnection[] = template.connections.map((conn) => ({
+    ...conn,
+    sourceNode: idMap.get(conn.sourceNode) ?? conn.sourceNode,
+    targetNode: idMap.get(conn.targetNode) ?? conn.targetNode,
+  }));
+
+  return { nodes, connections };
+}
+
 export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   {
     id: "keep-alive-pinger",
