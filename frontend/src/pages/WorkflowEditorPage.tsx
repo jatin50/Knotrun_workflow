@@ -81,7 +81,7 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
     }
   }
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["graph", workflowId],
     queryFn: () => fetchGraph(workflowId),
   });
@@ -242,8 +242,25 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-950 text-slate-400">
+      <div className="h-screen w-screen flex items-center justify-center bg-slate-950 text-slate-400">
         Loading workflow...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-950 text-slate-300 gap-3">
+        <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-xl text-rose-400">
+          ⚠️
+        </div>
+        <p className="text-sm font-medium">Failed to load workflow graph.</p>
+        <button
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["graph", workflowId] })}
+          className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition shadow"
+        >
+          Retry
+        </button>
       </div>
     );
   }

@@ -26,7 +26,19 @@ export async function startExecution(req: Request, res: Response) {
     data: { workflowId, status: "PENDING" },
   });
 
-  await executionQueue.add("run", { executionId: execution.id, workflowId });
+  try {
+    await executionQueue.add("run", { executionId: execution.id, workflowId });
+  } catch (queueErr) {
+    await prisma.execution.update({
+      where: { id: execution.id },
+      data: { status: "FAILED", finishedAt: new Date() },
+    });
+    return res.status(503).json({
+      error:
+        "Queue worker is currently unreachable. Make sure Redis is running and REDIS_URL in .env is valid, or use 'Test (Sync)'.",
+      details: (queueErr as Error).message,
+    });
+  }
 
   // 202 Accepted: the job is queued, not finished — the client polls
   // GET /api/executions/:id for status instead of waiting here.
