@@ -12,6 +12,7 @@ import credentialRoutes from "./routes/credential.routes";
 import { authenticate } from "./middleware/auth.middleware";
 import prisma from "./lib/prisma";
 import { initWorker } from "./worker";
+import { reconcileAllSchedulers } from "./queue/scheduler";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -86,6 +87,7 @@ app.listen(PORT, async () => {
   if (process.env.DISABLE_EMBEDDED_WORKER !== "true") {
     try {
       initWorker();
+      await reconcileAllSchedulers();
     } catch (workerErr) {
       console.warn("[Worker] Embedded worker startup warning:", (workerErr as Error).message);
     }

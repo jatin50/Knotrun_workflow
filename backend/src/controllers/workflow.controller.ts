@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
+import { syncWorkflowSchedulers } from "../queue/scheduler";
 
 // Every function here checks ownership by joining through Workspace.ownerId
 // rather than trusting the workspaceId/workflowId in the URL alone —
@@ -121,6 +122,12 @@ export async function updateWorkflow(req: Request, res: Response) {
       ...(active !== undefined ? { active: Boolean(active) } : {}),
     },
   });
+
+  if (active !== undefined) {
+    syncWorkflowSchedulers(id).catch((err) => {
+      console.warn(`[Workflow] Failed to sync schedulers for workflow ${id}:`, err);
+    });
+  }
 
   return res.json({ workflow });
 }
