@@ -103,7 +103,7 @@ function RegisterPage() {
         </form>
 
         <div className="flex items-center justify-between text-xs font-mono text-slate-500">
-          <a href="http://localhost:3000" className="hover:text-slate-300 transition">
+          <a href="https://knotrun-landing.onrender.com" className="hover:text-slate-300 transition">
             &larr; 3D Site
           </a>
           <Link to="/privacy" className="hover:text-slate-300 transition">

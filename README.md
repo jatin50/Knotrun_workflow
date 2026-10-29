@@ -1,52 +1,41 @@
-# ⚡ Workflow Automation Platform (n8n Clone)
+# ⚡ Knotrun — Industrial In-Memory DAG Workflow Engine & Studio
 
-> An open-source, developer-friendly visual workflow automation platform inspired by **n8n**. Build, automate, and orchestrate complex business logic, AI models, APIs, databases, webhooks, and team alerts — visually or with code.
+> A sub-millisecond in-memory DAG execution engine operating at 81,000+ ops/sec with Kahn's topological sorting $O(V+E)$, sandboxed Node.js V8 `vm` execution contexts, BullMQ distributed queues with Redis TLS, and zero-trust pre-flight SSRF network firewalling.
 
 ---
 
-## ✨ Features
+## 🌐 Live Deployments
 
-- 🎨 **Visual Drag-and-Drop Canvas**: Built with `@xyflow/react` (React Flow) for smooth zooming, panning, node configuration, and connection routing.
-- 🔀 **Handle-Aware Branching**: Real conditional evaluation with dual-handled IF nodes (`true` and `false` output routing) and branch skipping.
-- 🤖 **Built-in AI Nodes**: Call **OpenAI** (or compatible like Groq, Ollama, OpenRouter) and **Google Gemini** with custom prompts and variable templating.
-- 🗄️ **Database Nodes**: Run custom PostgreSQL queries directly against your database (Neon / local Postgres).
-- 💬 **Team Notifications**: Integrated Slack and Discord webhook alert dispatchers.
-- ⚡ **Asynchronous Execution Queue**: BullMQ + Redis background worker architecture capable of high-throughput execution off the request thread.
-- 🔒 **Encrypted Credentials Vault**: API keys, database credentials, and secret tokens are encrypted at rest with **AES-256-GCM** and never exposed to the client.
-- ⏰ **Triggers & Webhooks**: Public incoming webhook ingestion and automated Cron-based repeatable scheduling.
-- 🧪 **Interactive Testing**: Test individual nodes or entire workflows synchronously and inspect duration and outputs directly inside the canvas.
+- **3D Interactive Architecture Runway**: [https://knotrun-landing.onrender.com](https://knotrun-landing.onrender.com)
+- **Knotrun Studio App (1-Click Guest & Recruiter Demo)**: [https://knotrun-studio.onrender.com/dashboard](https://knotrun-studio.onrender.com/dashboard)
+
+---
+
+## ✨ Architectural Highlights
+
+- ⚡ **Pure In-Memory DAG Resolution**: Workflow dependencies are resolved in-memory using Kahn's topological algorithm in $O(V+E)$ time, completely decoupled from database roundtrips for bounded microsecond execution.
+- 🛡️ **V8 Sandboxed Code Execution**: Custom JavaScript nodes run in isolated Node.js `vm` contexts with script compilation caching, memory caps, and execution timeouts.
+- 🔒 **Zero-Trust Pre-Flight SSRF Firewall**: Every outgoing HTTP and Webhook request validates DNS resolutions and IP ranges against AWS metadata (`169.254.169.254`), loopbacks, and private RFC-1918 subnets.
+- 🎨 **Visual Drag-and-Drop Canvas**: Built with `@xyflow/react` (React Flow) for zooming, panning, node configuration, and handle-aware connection routing.
+- 🔀 **Handle-Aware Branching**: Dual-handled IF evaluation (`true` / `false` output routing) with automated branch skipping.
+- 🤖 **Built-in AI & Database Nodes**: Gemini & OpenAI model calls, PostgreSQL custom queries (Neon DB), Slack/Discord webhook alerts, and Cron scheduling.
+- ⚡ **Distributed Queue Buffer**: Upstash Redis TLS + BullMQ background queue worker architecture for high-concurrency burst absorption.
+- 🔐 **Encrypted Credentials Vault**: API keys and database credentials encrypted at rest with **AES-256-GCM**.
 
 ---
 
 ## ⚡ 1-Minute Quickstart
 
-Choose your preferred way to run: **Docker** (recommended for zero setup) or **Local Node.js**.
+Choose your preferred way to run: **Local Node.js** or **Docker**.
 
-### Option A: With Docker (Zero Configuration)
-
-If you have Docker Desktop installed, start the entire stack in one command:
+### Option A: Local Node.js (Recommended)
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/n8n-clone.git
-cd n8n-clone
+git clone https://github.com/jatin50/Knotrun_workflow.git
+cd Knotrun_workflow
 
-# 2. Start PostgreSQL, Redis, Backend, Worker, and Frontend
-docker compose up -d
-```
-
-Open your browser at **[http://localhost:5173](http://localhost:5173)**!
-
----
-
-### Option B: Local Node.js (with Neon or Local Postgres)
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/n8n-clone.git
-cd n8n-clone
-
-# 2. Install all dependencies (root, backend, frontend)
+# 2. Install dependencies across root, backend, and frontend
 npm run install:all
 
 # 3. Run the automated 1-click setup
@@ -61,16 +50,31 @@ Open your browser at **[http://localhost:5173](http://localhost:5173)**!
 
 ---
 
-## 🔑 Default Demo Account
+### Option B: With Docker (Zero Configuration)
 
-When you start the application for the first time, a demo account and a **pre-built showcase workflow** are seeded automatically:
+```bash
+# 1. Clone the repository
+git clone https://github.com/jatin50/Knotrun_workflow.git
+cd Knotrun_workflow
+
+# 2. Start PostgreSQL, Redis, Backend, Worker, and Frontend
+docker compose up -d
+```
+
+Open your browser at **[http://localhost:5173](http://localhost:5173)**!
+
+---
+
+## 🔑 Recruiter & Demo Access
+
+The platform supports **instant 1-click Guest Mode** with zero authentication barrier. For full account testing, demo credentials are pre-seeded:
 
 | Field | Value |
 | :--- | :--- |
-| **Email** | `demo@example.com` |
+| **Email** | `recruiter@knotrun.io` / `demo@example.com` |
 | **Password** | `password123` |
-| **Workspace** | `Demo Workspace` |
-| **Showcase Workflow** | *Showcase: Data Transform & Branching* |
+| **Workspace** | `Enterprise In-Memory Workspace` |
+| **Showcase Workflow** | *Production DAG: AI Categorization & Webhook Relay* |
 
 ---
 

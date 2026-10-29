@@ -44,6 +44,31 @@ function LoginPage() {
         </div>
 
         <div className="bg-[#0B111E]/95 border border-white/15 rounded-2xl p-7 shadow-2xl backdrop-blur-xl space-y-5">
+          {/* 1-CLICK RECRUITER / HIRING MANAGER DEMO BYPASS */}
+          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-mono font-bold text-amber-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+              <span>RECRUITER &amp; HIRING MANAGER ACCESS</span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-snug">
+              Skip authentication and enter directly with full demo workspaces and pre-loaded DAG pipelines.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard")}
+              className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-bold font-mono text-xs py-2.5 rounded-lg transition shadow-md uppercase tracking-wider cursor-pointer"
+            >
+              1-Click Instant Demo Access &rarr;
+            </button>
+          </div>
+
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-white/10 w-full" />
+            <span className="bg-[#0B111E] px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 relative">
+              OR SIGN IN WITH EMAIL
+            </span>
+          </div>
+
           {error && (
             <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-xl px-3.5 py-2.5 font-mono">
               {error}
@@ -98,7 +123,7 @@ function LoginPage() {
         {/* Back to landing page & Privacy */}
         <div className="flex items-center justify-between text-xs font-mono text-slate-500">
           <a
-            href="http://localhost:3000"
+            href="https://knotrun-landing.onrender.com"
             className="hover:text-slate-300 transition"
           >
             &larr; 3D Site

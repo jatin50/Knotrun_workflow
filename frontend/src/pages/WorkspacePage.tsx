@@ -197,7 +197,7 @@ function WorkspacePage() {
           </div>
           <div className="flex items-center gap-3">
             <a
-              href="http://localhost:3000"
+              href="https://knotrun-landing.onrender.com"
               className="text-xs font-mono text-slate-400 hover:text-white px-3.5 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition"
             >
               3D Site &rarr;

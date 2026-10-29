@@ -148,7 +148,7 @@ function DashboardPage() {
             </div>
 
             <a
-              href="http://localhost:3000"
+              href="https://knotrun-landing.onrender.com"
               className="text-xs font-mono text-slate-400 hover:text-white px-3.5 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition"
             >
               3D Site &rarr;
@@ -418,10 +418,10 @@ function DashboardPage() {
             <Link to="/privacy" className="hover:text-slate-300 transition">
               Privacy Policy
             </Link>
-            <a href="http://localhost:3000" className="hover:text-slate-300 transition">
+            <a href="https://knotrun-landing.onrender.com" className="hover:text-slate-300 transition">
               3D Architecture Site
             </a>
-            <a href="https://github.com/jatin50/n8n_workflow" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition">
+            <a href="https://github.com/jatin50/Knotrun_workflow" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition">
               GitHub
             </a>
           </div>

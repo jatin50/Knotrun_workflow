@@ -53,8 +53,8 @@ const REDIRECTS_301 = {
   "/workspaces": "/dashboard",
   "/privacy-policy": "/privacy",
   "/privacy.html": "/privacy",
-  "/3d": "http://localhost:3000",
-  "/landing": "http://localhost:3000",
+  "/3d": "https://knotrun-landing.onrender.com",
+  "/landing": "https://knotrun-landing.onrender.com",
 };
 
 export async function createServer() {
