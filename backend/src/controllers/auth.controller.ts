@@ -131,11 +131,11 @@ export async function refresh(req: Request, res: Response) {
 
 export async function guestLogin(_req: Request, res: Response) {
     try {
-        const GUEST_EMAIL = "recruiter.guest@aethelflow.internal";
+        const GUEST_EMAIL = "recruiter.guest@Knotrun.internal";
         let user = await prisma.user.findUnique({ where: { email: GUEST_EMAIL } });
 
         if (!user) {
-            const passwordHash = await bcrypt.hash("AethelFlow-Guest-Recruiter-2026!", 10);
+            const passwordHash = await bcrypt.hash("Knotrun-Guest-Recruiter-2026!", 10);
             user = await prisma.user.create({
                 data: {
                     name: "Guest Recruiter",

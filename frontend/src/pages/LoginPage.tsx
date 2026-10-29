@@ -27,7 +27,7 @@ function LoginPage() {
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono font-medium text-slate-300">
-            <span>AETHELFLOW ENGINE // V2.0</span>
+            <span>Knotrun ENGINE // V2.0</span>
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight font-['Space_Grotesk']">
             Account Log In
@@ -95,7 +95,7 @@ function LoginPage() {
             href="http://localhost:3000"
             className="text-xs font-mono text-slate-500 hover:text-slate-300 transition"
           >
-            &larr; Back to AethelFlow 3D Experience (Port 3000)
+            &larr; Back to Knotrun 3D Experience (Port 3000)
           </a>
         </div>
       </div>
