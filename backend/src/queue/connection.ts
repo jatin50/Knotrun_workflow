@@ -1,6 +1,6 @@
 import Redis, { RedisOptions } from "ioredis";
 
-let redisUrl = process.env.REDIS_URL;
+let redisUrl = process.env.REDIS_URL?.trim().replace(/^["']|["']$/g, "");
 
 if (!redisUrl) {
   console.warn(

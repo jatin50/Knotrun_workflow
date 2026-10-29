@@ -46,6 +46,8 @@ services:
         value: "*"
       - key: COOKIE_SAME_SITE
         value: none
+      - key: REDIS_URL
+        sync: false
 
   # 3. Knotrun Studio UI (Static Site on Global CDN)
   - type: web
