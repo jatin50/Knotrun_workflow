@@ -13,6 +13,7 @@ import { createWorkflow } from "../lib/workflow.api";
 import { saveGraph } from "../lib/graph.api";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
 import { SEOHead } from "../components/SEOHead";
+import { KnotrunLogo } from "../components/KnotrunLogo";
 import {
   WORKFLOW_TEMPLATES,
   instantiateTemplate,
@@ -119,18 +120,23 @@ function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* TOP NAVBAR / HEADER */}
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="flex items-center gap-3.5">
-            {isGuest && (
-              <span className="px-3 py-1 text-xs font-mono font-medium rounded-lg bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
-                Guest Mode
-              </span>
-            )}
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                Workspaces
-              </h1>
+          <div className="flex items-center gap-4">
+            <Link to="/" title="Knotrun Studio">
+              <KnotrunLogo variant="icon" size="md" />
+            </Link>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                  Workspaces
+                </h1>
+                {isGuest && (
+                  <span className="px-2.5 py-0.5 text-[11px] font-mono font-medium rounded-md bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
+                    Guest Mode
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Manage your in-memory execution environments & DAG pipelines
+                Manage your in-memory execution environments &amp; DAG pipelines
               </p>
             </div>
           </div>
