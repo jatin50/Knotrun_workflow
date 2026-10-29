@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
+    "prisma:deploy": "node scripts/deploy.mjs",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
   "prisma": {
@@ -19,6 +19,12 @@
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.9.2",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.34.2",
     "cookie-parser": "^1.4.7",
@@ -27,17 +33,11 @@
     "express": "^5.2.1",
     "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.3",
-    "prisma": "6.19.3"
+    "prisma": "6.19.3",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.9.2",
     "nodemon": "^3.1.14",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "ts-node": "^10.9.2"
   }
 }
