@@ -41,6 +41,7 @@ The repository includes a ready-to-use [`render.yaml`](./render.yaml) blueprint 
    - **`knotrun-db`**: Managed PostgreSQL database.
    - **`knotrun-api`**: Node.js Backend Web Service.
    - **`knotrun-studio`**: React Frontend Static Site on Render's Global CDN.
+   - **`REDIS_URL` Prompt**: Render will ask you to enter the value for `REDIS_URL`. Simply paste your Upstash Redis connection string (`rediss://...`).
 6. Click **Apply**.
 7. Render will provision the database, run migrations, build both services, and output your live URLs!
 
