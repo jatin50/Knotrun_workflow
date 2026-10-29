@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "nodemon",
     "worker": "nodemon --watch src --ext ts --exec ts-node src/worker.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
   "prisma": {

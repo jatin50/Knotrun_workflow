@@ -12,10 +12,12 @@
     "bench:db": "node scripts/benchmark_db.mjs",
     "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "start": "node backend/dist/index.js",
     "dev:backend": "npm --prefix backend run dev",
     "dev:worker": "npm --prefix backend run worker",
     "dev:frontend": "npm --prefix frontend run dev",
     "db:migrate": "npm --prefix backend run prisma:migrate",
+    "db:deploy": "npm --prefix backend run prisma:deploy",
     "db:seed": "npm --prefix backend run prisma:seed",
     "db:studio": "npm --prefix backend exec prisma studio"
   },

@@ -1,8 +1,15 @@
 import Redis, { RedisOptions } from "ioredis";
 
 let redisUrl = process.env.REDIS_URL;
+
 if (!redisUrl) {
-  throw new Error("REDIS_URL must be set in .env before starting the server or worker");
+  console.warn(
+    "[Redis] WARNING: REDIS_URL environment variable is not defined. " +
+    "Background BullMQ queue workers and asynchronous scheduling will be offline. " +
+    "In-memory DAG execution and visual test runs remain fully active."
+  );
+  // Default to localhost fallback with lazyConnect so it doesn't crash the server on boot
+  redisUrl = "redis://127.0.0.1:6379";
 }
 
 // Upstash cloud endpoints enforce TLS and require the rediss:// scheme
@@ -13,19 +20,18 @@ if (redisUrl.includes("upstash.io") && redisUrl.startsWith("redis://")) {
 const isTls = redisUrl.startsWith("rediss://");
 
 const options: RedisOptions = {
+  lazyConnect: true,
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
   connectTimeout: 8000,
   retryStrategy(times) {
-    // Exponential backoff capped at 3s so reconnection is responsive without spamming
+    if (!process.env.REDIS_URL && times > 2) {
+      return null;
+    }
     return Math.min(times * 200, 3000);
   },
   reconnectOnError(err) {
-    const targetError = "READONLY";
-    if (err.message.includes(targetError)) {
-      return true;
-    }
-    return false;
+    return err.message.includes("READONLY");
   },
 };
 
@@ -35,12 +41,20 @@ if (isTls) {
 
 export const connection = new Redis(redisUrl, options);
 
+if (process.env.REDIS_URL) {
+  connection.connect().catch((err) => {
+    console.warn(`[Redis] Initial connection warning: ${err.message}`);
+  });
+}
+
 connection.on("connect", () => {
   console.log("[Redis] Connected successfully to Redis cluster.");
 });
 
 connection.on("error", (err) => {
-  console.warn(`[Redis] Connection warning: ${err.message}`);
+  if (process.env.REDIS_URL) {
+    console.warn(`[Redis] Connection warning: ${err.message}`);
+  }
 });
 
 export function isRedisReady(): boolean {
