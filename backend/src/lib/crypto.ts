@@ -3,24 +3,25 @@ import crypto from "node:crypto";
 const ALGORITHM = "aes-256-gcm";
 
 function getKey(): Buffer {
-  const keyHex = process.env.CREDENTIALS_ENCRYPTION_KEY;
-  if (!keyHex) {
-    throw new Error("CREDENTIALS_ENCRYPTION_KEY must be set in .env before using credentials");
+  const rawKey = process.env.CREDENTIALS_ENCRYPTION_KEY;
+  if (!rawKey) {
+    // If not provided, derive a deterministic 32-byte key from JWT_SECRET
+    const fallback = process.env.JWT_SECRET || "knotrun-vault-encryption-key-fallback-2026";
+    return crypto.createHash("sha256").update(fallback).digest();
   }
-  const key = Buffer.from(keyHex, "hex");
-  if (key.length !== 32) {
-    throw new Error(
-      "CREDENTIALS_ENCRYPTION_KEY must be a 32-byte key, hex-encoded (64 hex characters). " +
-        "Generate one with: openssl rand -hex 32"
-    );
+
+  // If exactly 64 hex characters, parse directly as hex buffer
+  if (/^[0-9a-fA-F]{64}$/.test(rawKey)) {
+    return Buffer.from(rawKey, "hex");
   }
-  return key;
+
+  // If Render auto-generated a random alphanumeric string (generateValue: true),
+  // derive a strict 32-byte cryptographic AES-256 key using SHA-256
+  return crypto.createHash("sha256").update(rawKey).digest();
 }
 
 // Storage format: base64(iv[12 bytes] + authTag[16 bytes] + ciphertext).
-// Keeping everything a single opaque string in one DB column, rather than
-// three separate columns, keeps the Credential model simple — this format
-// is only ever produced/consumed by this one file.
+// Keeping everything a single opaque string in one DB column keeps the Credential model simple.
 export function encrypt(plaintext: string): string {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(ALGORITHM, getKey(), iv);
