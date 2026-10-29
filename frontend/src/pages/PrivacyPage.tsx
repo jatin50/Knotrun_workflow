@@ -105,10 +105,10 @@ export default function PrivacyPage() {
             &larr; Return to Workspaces
           </Link>
           <a
-            href="mailto:security@knotrun.io"
+            href="mailto:jainjatin2006@gmail.com"
             className="text-xs font-mono text-slate-400 hover:text-white transition"
           >
-            Security Inquiries: security@knotrun.io
+            Security Inquiries: jainjatin2006@gmail.com
           </a>
         </div>
       </div>
