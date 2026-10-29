@@ -109,7 +109,7 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#070A0F] text-slate-100 selection:bg-white/20">
       {/* EXPANSIVE FULL-WIDTH CONTAINER (ELIMINATES DEAD SPACE) */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* TOP NAVBAR / HEADER */}
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
           <div className="flex items-center gap-3.5">

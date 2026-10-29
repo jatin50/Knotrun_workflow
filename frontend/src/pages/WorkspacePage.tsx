@@ -168,9 +168,9 @@ function WorkspacePage() {
 
   return (
     <div className="min-h-screen bg-[#070A0F] text-slate-100 selection:bg-white/20">
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Top Navbar */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-5">
           <div className="flex items-center gap-3.5">
             <Link
               to="/dashboard"
