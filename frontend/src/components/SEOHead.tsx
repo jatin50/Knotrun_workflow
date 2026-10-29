@@ -65,6 +65,15 @@ export const SEOHead: React.FC<SEOProps> = ({
   useEffect(() => {
     document.title = title;
 
+    let fav = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+    if (!fav) {
+      fav = document.createElement("link");
+      fav.setAttribute("rel", "icon");
+      document.head.appendChild(fav);
+    }
+    fav.setAttribute("type", "image/svg+xml");
+    fav.setAttribute("href", "/favicon.svg");
+
     const setMeta = (nameAttr: "name" | "property", key: string, content: string) => {
       let el = document.querySelector(`meta[${nameAttr}="${key}"]`);
       if (!el) {

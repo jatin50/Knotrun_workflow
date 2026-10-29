@@ -21,6 +21,7 @@ import { useAuthStore } from "../store/auth.store";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { SEOHead } from "../components/SEOHead";
+import { KnotrunLogo } from "../components/KnotrunLogo";
 import { instantiateTemplate, type WorkflowTemplate } from "../templates/workflowTemplates";
 
 function WorkspacePage() {
@@ -179,6 +180,9 @@ function WorkspacePage() {
         {/* Top Navbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-5">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Link to="/dashboard" title="Return to Workspaces">
+              <KnotrunLogo variant="icon" size="sm" />
+            </Link>
             <Breadcrumbs items={[{ label: workspace?.name ?? "Workspace" }]} />
             <div className="flex items-center gap-3">
               {isGuest && (

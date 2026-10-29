@@ -29,6 +29,7 @@ import NodePalette from "../components/NodePalette";
 import NodeConfigPanel from "../components/NodeConfigPanel";
 import TestResultsPanel from "../components/TestResultsPanel";
 import { SEOHead } from "../components/SEOHead";
+import { KnotrunLogo } from "../components/KnotrunLogo";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
 import { instantiateTemplate, type WorkflowTemplate } from "../templates/workflowTemplates";
 
@@ -373,14 +374,18 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
         canonicalUrl={`https://studio.knotrun.io/workflows/${workflowId}`}
       />
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2 shrink-0">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <Link to="/dashboard" title="Knotrun Studio" className="flex items-center">
+            <KnotrunLogo variant="icon" size="xs" />
+          </Link>
+          <div className="h-4 w-px bg-slate-800" />
           <Link
             to=".."
             relative="path"
             onClick={handleNavigateLink}
-            className="text-sm text-slate-500 hover:text-slate-300"
+            className="text-xs font-mono text-slate-400 hover:text-white transition"
           >
-            &larr; Back to workspace
+            &larr; Workspaces
           </Link>
           <div className="h-4 w-px bg-slate-800" />
           <div className="flex items-center gap-2.5">

@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { SEOHead } from "../components/SEOHead";
+import { KnotrunLogo } from "../components/KnotrunLogo";
 
 export default function PrivacyPage() {
   return (
@@ -15,7 +16,12 @@ export default function PrivacyPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 sm:py-16 space-y-8">
         {/* Top Navbar Bar */}
         <div className="flex items-center justify-between border-b border-white/10 pb-5">
-          <Breadcrumbs items={[{ label: "Privacy Policy" }]} />
+          <div className="flex items-center gap-3">
+            <Link to="/dashboard" title="Return to Workspaces">
+              <KnotrunLogo variant="icon" size="sm" />
+            </Link>
+            <Breadcrumbs items={[{ label: "Privacy Policy" }]} />
+          </div>
           <div className="flex items-center gap-3">
             <a
               href="http://localhost:3000"

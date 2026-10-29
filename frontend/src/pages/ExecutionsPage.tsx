@@ -12,6 +12,7 @@ import { fetchWorkflow } from "../lib/workflow.api";
 import { getNodeTypeDef } from "../nodes/nodeTypes";
 import { SEOHead } from "../components/SEOHead";
 import { Breadcrumbs } from "../components/Breadcrumbs";
+import { KnotrunLogo } from "../components/KnotrunLogo";
 
 const STATUS_CLASSES: Record<ExecutionStatus, string> = {
   PENDING: "text-amber-300 bg-amber-950/60 border-amber-800/80",
@@ -263,13 +264,17 @@ function ExecutionsPage() {
       <div className="max-w-3xl mx-auto space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <Breadcrumbs
-              items={[
-                { label: workflow?.name ?? "Workflow", href: `/workflows/${workflowId}` },
-                { label: "Executions" },
-              ]}
-              className="mb-2"
-            />
+            <div className="flex items-center gap-3 mb-2">
+              <Link to="/dashboard" title="Return to Workspaces">
+                <KnotrunLogo variant="icon" size="xs" />
+              </Link>
+              <Breadcrumbs
+                items={[
+                  { label: workflow?.name ?? "Workflow", href: `/workflows/${workflowId}` },
+                  { label: "Executions" },
+                ]}
+              />
+            </div>
             <div className="flex items-center gap-3 mt-1">
               <h1 className="text-xl font-semibold text-slate-100">
                 {workflow?.name ? `${workflow.name} — Executions` : "Execution History"}

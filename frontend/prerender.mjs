@@ -71,6 +71,10 @@ async function prerender() {
 
     const headTags = `
     <title>${route.title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/logo-192.png" />
     <meta name="description" content="${route.description}" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="google-site-verification" content="google-site-verification=KnotrunStudioVerificationToken2026" />
