@@ -20,8 +20,7 @@ services:
     region: oregon
     rootDir: backend
     buildCommand: npm install && npm run build
-    preDeployCommand: npm run prisma:deploy
-    startCommand: npm run start
+    startCommand: npm run prisma:deploy && npm run start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -53,8 +52,6 @@ services:
   - type: web
     name: knotrun-studio
     runtime: static
-    plan: free
-    region: oregon
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist/client
