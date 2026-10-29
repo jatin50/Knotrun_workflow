@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth.store";
+import { SEOHead } from "../components/SEOHead";
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -23,69 +24,93 @@ function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 bg-slate-900 border border-slate-800 rounded-xl p-6"
-      >
-        <h1 className="text-xl font-semibold">Create an account</h1>
-
-        {error && (
-          <p className="text-sm text-red-400 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">
-            {error}
+    <div className="min-h-screen bg-[#070A0F] text-slate-100 flex items-center justify-center px-4 selection:bg-white/20">
+      <SEOHead
+        title="Create Account | Knotrun Studio"
+        description="Create your Knotrun Studio account to orchestrate high-performance DAG workflows and manage custom integrations."
+        canonicalUrl="https://studio.knotrun.io/register"
+      />
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono font-medium text-slate-300">
+            <span>Knotrun STUDIO // REGISTER</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight font-['Space_Grotesk']">
+            Create an Account
+          </h1>
+          <p className="text-xs text-slate-400">
+            Set up your organization workspace on Knotrun Studio
           </p>
-        )}
-
-        <div className="space-y-1">
-          <label className="text-sm text-slate-400">Name</label>
-          <input
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-slate-500"
-          />
         </div>
 
-        <div className="space-y-1">
-          <label className="text-sm text-slate-400">Email</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-slate-500"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm text-slate-400">Password</label>
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-slate-500"
-          />
-          <p className="text-xs text-slate-500">At least 8 characters.</p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md py-2 text-sm font-medium transition"
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 bg-[#0B111E]/95 border border-white/15 rounded-2xl p-7 shadow-2xl backdrop-blur-xl"
         >
-          {status === "loading" ? "Creating account..." : "Create account"}
-        </button>
+          {error && (
+            <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-xl px-3.5 py-2.5 font-mono">
+              {error}
+            </p>
+          )}
 
-        <p className="text-sm text-slate-400 text-center">
-          Already have an account?{" "}
-          <Link to="/login" className="text-indigo-400 hover:underline">
-            Log in
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono text-slate-300">Full Name</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-xl bg-slate-900/90 border border-white/15 px-3.5 py-2.5 text-xs text-white outline-none focus:border-white/40 transition"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono text-slate-300">Email Address</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-xl bg-slate-900/90 border border-white/15 px-3.5 py-2.5 text-xs text-white outline-none focus:border-white/40 transition"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono text-slate-300">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl bg-slate-900/90 border border-white/15 px-3.5 py-2.5 text-xs text-white outline-none focus:border-white/40 transition"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            className="w-full rounded-xl bg-white hover:bg-slate-200 text-slate-950 px-4 py-3 text-xs font-mono font-bold tracking-wider uppercase transition shadow-md disabled:opacity-50 mt-2"
+          >
+            {status === "loading" ? "Creating account..." : "Sign Up"}
+          </button>
+
+          <p className="text-xs text-center text-slate-400 pt-2 font-mono">
+            Already have an account?{" "}
+            <Link to="/login" className="text-white hover:underline font-semibold">
+              Log in
+            </Link>
+          </p>
+        </form>
+
+        <div className="flex items-center justify-between text-xs font-mono text-slate-500">
+          <a href="http://localhost:3000" className="hover:text-slate-300 transition">
+            &larr; 3D Site
+          </a>
+          <Link to="/privacy" className="hover:text-slate-300 transition">
+            Privacy Policy
           </Link>
-        </p>
-      </form>
+        </div>
+      </div>
     </div>
   );
 }

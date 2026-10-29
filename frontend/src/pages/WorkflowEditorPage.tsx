@@ -28,6 +28,7 @@ import WorkflowNode, { type WorkflowNodeData } from "../components/WorkFlow";
 import NodePalette from "../components/NodePalette";
 import NodeConfigPanel from "../components/NodeConfigPanel";
 import TestResultsPanel from "../components/TestResultsPanel";
+import { SEOHead } from "../components/SEOHead";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
 import { instantiateTemplate, type WorkflowTemplate } from "../templates/workflowTemplates";
 
@@ -366,6 +367,11 @@ function EditorCanvas({ workflowId }: { workflowId: string }) {
 
   return (
     <div className="h-screen w-full flex flex-col bg-slate-950 overflow-hidden">
+      <SEOHead
+        title={`${workflow?.name ?? "Workflow Editor"} | Knotrun Studio`}
+        description={`Interactive visual DAG canvas for ${workflow?.name ?? "workflow"}. Assemble nodes, configure triggers, and test execution.`}
+        canonicalUrl={`https://studio.knotrun.io/workflows/${workflowId}`}
+      />
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2 shrink-0">
         <div className="flex items-center gap-4">
           <Link

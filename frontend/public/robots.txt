@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /dashboard
+Allow: /login
+Allow: /register
+Allow: /privacy
+Disallow: /api/
+Disallow: /workspaces/*/credentials
+
+# Studio Sitemap
+Sitemap: https://studio.knotrun.io/sitemap.xml

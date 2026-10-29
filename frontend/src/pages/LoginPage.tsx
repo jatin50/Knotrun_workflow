@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth.store";
+import { SEOHead } from "../components/SEOHead";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -23,6 +24,11 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#070A0F] text-slate-100 flex items-center justify-center px-4 selection:bg-white/20">
+      <SEOHead
+        title="Sign In | Knotrun Studio"
+        description="Sign in to your Knotrun Studio account to manage private DAG workflows, encrypted credentials, and execution history."
+        canonicalUrl="https://studio.knotrun.io/login"
+      />
       <div className="w-full max-w-sm space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
@@ -89,14 +95,20 @@ function LoginPage() {
           </form>
         </div>
 
-        {/* Back to landing page */}
-        <div className="text-center">
+        {/* Back to landing page & Privacy */}
+        <div className="flex items-center justify-between text-xs font-mono text-slate-500">
           <a
             href="http://localhost:3000"
-            className="text-xs font-mono text-slate-500 hover:text-slate-300 transition"
+            className="hover:text-slate-300 transition"
           >
-            &larr; Back to Knotrun 3D Experience (Port 3000)
+            &larr; 3D Site
           </a>
+          <Link
+            to="/privacy"
+            className="hover:text-slate-300 transition"
+          >
+            Privacy Policy
+          </Link>
         </div>
       </div>
     </div>

@@ -27,6 +27,10 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   }, [status, user, loginAsGuest]);
 
   if (status === "idle" || status === "loading") {
+    // During Server-Side Rendering (Node environment), render children so search engines index the page
+    if (typeof window === "undefined") {
+      return <>{children}</>;
+    }
     return (
       <div className="min-h-screen bg-[#070A0F] text-slate-400 flex items-center justify-center font-mono text-xs">
         Initializing studio...

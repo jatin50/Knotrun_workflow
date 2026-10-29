@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://studio.knotrun.io/</loc>
+    <lastmod>2026-10-29T16:35:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://studio.knotrun.io/og-image.webp</image:loc>
+      <image:title>Knotrun Studio — Cloud DAG Workflow Editor</image:title>
+      <image:caption>Visual node-based workflow builder with guest mode and enterprise templates</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://studio.knotrun.io/dashboard</loc>
+    <lastmod>2026-10-29T16:35:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://studio.knotrun.io/login</loc>
+    <lastmod>2026-10-29T16:35:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://studio.knotrun.io/register</loc>
+    <lastmod>2026-10-29T16:35:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://studio.knotrun.io/privacy</loc>
+    <lastmod>2026-10-29T16:35:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

@@ -12,6 +12,7 @@ import {
 import { createWorkflow } from "../lib/workflow.api";
 import { saveGraph } from "../lib/graph.api";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
+import { SEOHead } from "../components/SEOHead";
 import {
   WORKFLOW_TEMPLATES,
   instantiateTemplate,
@@ -108,6 +109,12 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#070A0F] text-slate-100 selection:bg-white/20">
+      <SEOHead
+        title="Workspaces | Knotrun Studio — Cloud DAG Orchestrator"
+        description="Manage in-memory execution workspaces, enterprise DAG pipelines, and real-time execution telemetry in Knotrun Studio."
+        canonicalUrl="https://studio.knotrun.io/dashboard"
+        schemaType="software"
+      />
       {/* EXPANSIVE FULL-WIDTH CONTAINER (ELIMINATES DEAD SPACE) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* TOP NAVBAR / HEADER */}
@@ -392,6 +399,27 @@ function DashboardPage() {
             ))}
           </div>
         </div>
+
+        {/* FOOTER & INTERNAL LINKS */}
+        <footer className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-500">
+          <div className="flex items-center gap-3">
+            <span>Knotrun Studio v2.4</span>
+            <span>•</span>
+            <span className="text-emerald-400">81,151 ops/s</span>
+          </div>
+
+          <div className="flex items-center gap-5">
+            <Link to="/privacy" className="hover:text-slate-300 transition">
+              Privacy Policy
+            </Link>
+            <a href="http://localhost:3000" className="hover:text-slate-300 transition">
+              3D Architecture Site
+            </a>
+            <a href="https://github.com/jatin50/n8n_workflow" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition">
+              GitHub
+            </a>
+          </div>
+        </footer>
       </div>
 
       {/* TEMPLATE GALLERY MODAL */}

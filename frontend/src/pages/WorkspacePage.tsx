@@ -19,6 +19,8 @@ import {
 import { saveGraph } from "../lib/graph.api";
 import { useAuthStore } from "../store/auth.store";
 import TemplateGalleryModal from "../components/TemplateGalleryModal";
+import { Breadcrumbs } from "../components/Breadcrumbs";
+import { SEOHead } from "../components/SEOHead";
 import { instantiateTemplate, type WorkflowTemplate } from "../templates/workflowTemplates";
 
 function WorkspacePage() {
@@ -168,24 +170,26 @@ function WorkspacePage() {
 
   return (
     <div className="min-h-screen bg-[#070A0F] text-slate-100 selection:bg-white/20">
+      <SEOHead
+        title={`${workspace?.name ?? "Workspace"} | Knotrun Studio`}
+        description={`Manage pipelines, DAG workflows, and encrypted credentials in workspace ${workspace?.name ?? ""}.`}
+        canonicalUrl={`https://studio.knotrun.io/workspaces/${workspaceId}`}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Top Navbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-5">
-          <div className="flex items-center gap-3.5">
-            <Link
-              to="/dashboard"
-              className="text-xs font-mono text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition"
-            >
-              &larr; Workspaces
-            </Link>
-            {isGuest && (
-              <span className="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
-                Guest Mode
-              </span>
-            )}
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              {workspace?.name ?? "Workspace"}
-            </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Breadcrumbs items={[{ label: workspace?.name ?? "Workspace" }]} />
+            <div className="flex items-center gap-3">
+              {isGuest && (
+                <span className="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-white/10 text-slate-300 border border-white/15 tracking-wider uppercase">
+                  Guest Mode
+                </span>
+              )}
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                {workspace?.name ?? "Workspace"}
+              </h1>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <a

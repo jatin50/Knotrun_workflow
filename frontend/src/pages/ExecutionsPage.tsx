@@ -10,6 +10,8 @@ import {
 } from "../lib/executionHistory.api";
 import { fetchWorkflow } from "../lib/workflow.api";
 import { getNodeTypeDef } from "../nodes/nodeTypes";
+import { SEOHead } from "../components/SEOHead";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const STATUS_CLASSES: Record<ExecutionStatus, string> = {
   PENDING: "text-amber-300 bg-amber-950/60 border-amber-800/80",
@@ -253,15 +255,21 @@ function ExecutionsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+      <SEOHead
+        title={`Executions — ${workflow?.name ?? "Workflow"} | Knotrun Studio`}
+        description={`Real-time DAG telemetry, execution history, and node logs for ${workflow?.name ?? "workflow"}.`}
+        canonicalUrl={`https://studio.knotrun.io/workflows/${workflowId}/executions`}
+      />
       <div className="max-w-3xl mx-auto space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <Link
-              to={`/workflows/${workflowId}`}
-              className="text-sm text-slate-500 hover:text-slate-300 inline-flex items-center gap-1 transition"
-            >
-              &larr; Back to editor
-            </Link>
+            <Breadcrumbs
+              items={[
+                { label: workflow?.name ?? "Workflow", href: `/workflows/${workflowId}` },
+                { label: "Executions" },
+              ]}
+              className="mb-2"
+            />
             <div className="flex items-center gap-3 mt-1">
               <h1 className="text-xl font-semibold text-slate-100">
                 {workflow?.name ? `${workflow.name} — Executions` : "Execution History"}

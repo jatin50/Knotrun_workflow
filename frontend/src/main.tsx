@@ -1,13 +1,14 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import App from "./App";
 
 const queryClient = new QueryClient();
+const container = document.getElementById("root")!;
 
-createRoot(document.getElementById("root")!).render(
+const appNode = (
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -16,3 +17,9 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>
 );
+
+if (container.hasChildNodes()) {
+  hydrateRoot(container, appNode);
+} else {
+  createRoot(container).render(appNode);
+}
