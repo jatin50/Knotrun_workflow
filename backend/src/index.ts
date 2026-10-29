@@ -35,16 +35,16 @@ app.use(
     origin: (origin, callback) => {
       // Allow server-to-server or curl requests with no origin
       if (!origin) return callback(null, true);
-      // Allow exact match or wildcard
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+
+      const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+      const isRender = origin.endsWith(".onrender.com");
+      const isCustomDomain = origin.endsWith("knotrun.io");
+      const isExplicitlyAllowed = allowedOrigins.includes(origin) || allowedOrigins.includes("*");
+
+      if (isLocalhost || isRender || isCustomDomain || isExplicitlyAllowed) {
         return callback(null, true);
       }
-      // Allow any Render preview and production domains
-      if (origin.endsWith(".onrender.com")) {
-        return callback(null, true);
-      }
-      // Fallback allowed for demo convenience
-      return callback(null, true);
+      return callback(new Error(`CORS blocked: Origin ${origin} is not authorized`));
     },
     credentials: true,
   })
